@@ -18,17 +18,17 @@ async function auth(req, res, next) {
   }
 
   const keyHash = hashKey(rawKey);
-  const keyRecord = await getKeyByHash(keyHash).catch(() => null);
+  const record = await getKeyByHash(keyHash).catch(() => null);
 
-  if (!keyRecord || !keyRecord.is_active) {
+  if (!record || !record.is_active) {
     return res.status(401).json({ error: 'Invalid API key' });
   }
 
-  if (keyRecord.credits <= 0) {
+  if (record.credit_balance <= 0) {
     return res.status(402).json({ error: 'Insufficient credits' });
   }
 
-  req.keyRecord = keyRecord;
+  req.keyRecord = record;
   next();
 }
 

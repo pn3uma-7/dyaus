@@ -5,29 +5,35 @@ const pool = new Pool(config.pg);
 
 async function getKeyByHash(keyHash) {
   const result = await pool.query(
-    `SELECT id, user_id, credits, is_active
-     FROM api_keys
-     WHERE key_hash = $1`,
+    `SELECT k.id, k.user_id, k.is_active, u.credit_balance
+     FROM api_keys k
+     JOIN users u ON u.id = k.user_id
+     WHERE k.key_hash = $1`,
     [keyHash]
   );
   return result.rows[0] || null;
 }
 
-async function deductCredits(keyId, amount) {
+async function deductCredits(userId, amount) {
   await pool.query(
-    `UPDATE api_keys
-     SET credits = credits - $1, last_used_at = NOW()
-     WHERE id = $2`,
-    [amount, keyId]
+    `UPDATE users SET credit_balance = credit_balance - $1 WHERE id = $2`,
+    [amount, userId]
   );
 }
 
-async function logUsage({ keyId, model, inputTokens, outputTokens, creditsDeducted, latencyMs }) {
+async function updateLastUsed(keyId) {
   await pool.query(
-    `INSERT INTO usage_log (api_key_id, model, input_tokens, output_tokens, credits_deducted, latency_ms)
-     VALUES ($1, $2, $3, $4, $5, $6)`,
-    [keyId, model, inputTokens, outputTokens, creditsDeducted, latencyMs]
+    `UPDATE api_keys SET last_used_at = NOW() WHERE id = $1`,
+    [keyId]
   );
 }
 
-module.exports = { pool, getKeyByHash, deductCredits, logUsage };
+async function logUsage({ userId, keyId, model, inputTokens, outputTokens, creditsDeducted, durationMs }) {
+  await pool.query(
+    `INSERT INTO usage_log (user_id, key_id, model, input_tokens, output_tokens, credits_deducted, duration_ms)
+     VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+    [userId, keyId, model, inputTokens, outputTokens, creditsDeducted, durationMs]
+  );
+}
+
+module.exports = { pool, getKeyByHash, deductCredits, updateLastUsed, logUsage };

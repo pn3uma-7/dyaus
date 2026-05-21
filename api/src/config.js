@@ -7,21 +7,17 @@ module.exports = {
   pg: {
     host: process.env.PG_HOST || 'localhost',
     port: parseInt(process.env.PG_PORT) || 5432,
-    database: process.env.PG_DB || 'inference_platform',
-    user: process.env.PG_USER || 'platform_user',
+    database: process.env.PG_DB || 'dyaus',
+    user: process.env.PG_USER || 'dyaus_user',
     password: process.env.PG_PASSWORD,
   },
 
-  ollama: {
-    host: process.env.OLLAMA_HOST || 'http://localhost:11434',
-    defaultModel: process.env.OLLAMA_DEFAULT_MODEL || 'qwen2.5:7b',
+  inference: {
+    base: process.env.INFERENCE_BASE || 'http://localhost:8080',
+    defaultModel: process.env.DEFAULT_MODEL || 'qwen3-30b',
   },
 
-  credits: {
-    default: parseInt(process.env.DEFAULT_CREDITS) || 100,
-    outputTokenMultiplier: parseInt(process.env.OUTPUT_TOKEN_MULTIPLIER) || 2,
-  },
-
-  apiKeyPrefix: process.env.API_KEY_PREFIX || 'sk-',
+  outputTokenMultiplier: parseInt(process.env.OUTPUT_TOKEN_MULTIPLIER) || 2,
+  apiKeyPrefix: process.env.API_KEY_PREFIX || 'sk-dyaus-',
   adminSecret: process.env.ADMIN_SECRET,
 };

@@ -11,7 +11,7 @@ app.use('/v1/chat', chatRouter);
 app.use('/', healthRouter);
 
 app.listen(config.port, () => {
-  console.log(`API running on port ${config.port}`);
+  console.log(`Dyaus API running on port ${config.port}`);
 });
 
 process.on('SIGTERM', async () => {

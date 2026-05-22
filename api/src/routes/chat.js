@@ -1,46 +1,96 @@
+const crypto = require('crypto');
 const express = require('express');
 const { auth } = require('../middleware/auth');
-const { chatCompletion } = require('../services/inference');
-const { deductCredits, updateLastUsed, logUsage } = require('../services/postgres');
-const { extractUsage } = require('../services/tokenCounter');
-const { calculateCredits } = require('../services/credits');
+const { rateLimit } = require('../middleware/rateLimit');
+const { pushJob } = require('../queue/producer');
+const { createSubscriber } = require('../services/redis');
 const config = require('../config');
 
 const router = express.Router();
 
-router.post('/completions', auth, async (req, res) => {
-  const { keyRecord } = req;
-  const start = Date.now();
-  const model = req.body.model || config.inference.defaultModel;
+const JOB_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes — covers long generations
 
-  let inferenceResponse;
+router.post('/completions', auth, rateLimit, async (req, res) => {
+  const { keyRecord } = req;
+  const model = req.body.model || config.inference.defaultModel;
+  const isStream = !!req.body.stream;
+  const jobId = crypto.randomUUID();
+  const redisChannel = `job:${jobId}`;
+
+  // Subscribe BEFORE enqueuing to avoid a race where the worker
+  // publishes before the API is listening.
+  const sub = createSubscriber();
   try {
-    inferenceResponse = await chatCompletion(req.body);
-  } catch (err) {
-    const status = err.status === 404 ? 503 : 502;
-    return res.status(status).json({ error: 'Model not available' });
+    await sub.subscribe(redisChannel);
+  } catch {
+    return res.status(503).json({ error: 'Service temporarily unavailable' });
   }
 
-  const durationMs = Date.now() - start;
-  const { inputTokens, outputTokens } = extractUsage(inferenceResponse);
-  const creditsDeducted = calculateCredits(inputTokens, outputTokens);
+  try {
+    await pushJob(jobId, req.body, keyRecord);
+  } catch {
+    sub.disconnect();
+    return res.status(503).json({ error: 'Service temporarily unavailable' });
+  }
 
-  // Return response immediately, deduct and log async
-  res.json({ ...inferenceResponse, model });
+  if (isStream) {
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    res.flushHeaders();
 
-  Promise.all([
-    deductCredits(keyRecord.user_id, creditsDeducted),
-    updateLastUsed(keyRecord.id),
-    logUsage({
-      userId: keyRecord.user_id,
-      keyId: keyRecord.id,
-      model,
-      inputTokens,
-      outputTokens,
-      creditsDeducted,
-      durationMs,
-    }),
-  ]).catch(err => console.error('Post-request accounting error:', err));
+    let done = false;
+    const cleanup = () => {
+      if (done) return;
+      done = true;
+      clearTimeout(timeoutId);
+      sub.unsubscribe(redisChannel).catch(() => {});
+      sub.disconnect();
+    };
+
+    const timeoutId = setTimeout(() => {
+      cleanup();
+      res.write('data: [DONE]\n\n');
+      res.end();
+    }, JOB_TIMEOUT_MS);
+
+    sub.on('message', (_ch, rawMsg) => {
+      const msg = JSON.parse(rawMsg);
+      if (msg.type === 'chunk') {
+        res.write(`${msg.line}\n\n`);
+      } else if (msg.type === 'done') {
+        cleanup();
+        res.write('data: [DONE]\n\n');
+        res.end();
+      } else if (msg.type === 'error') {
+        cleanup();
+        res.write(`data: {"error":${JSON.stringify(msg.message)}}\n\n`);
+        res.write('data: [DONE]\n\n');
+        res.end();
+      }
+    });
+
+    req.on('close', cleanup);
+
+  } else {
+    const timeoutId = setTimeout(() => {
+      sub.disconnect();
+      if (!res.headersSent) {
+        res.status(504).json({ error: 'Request timeout' });
+      }
+    }, JOB_TIMEOUT_MS);
+
+    sub.on('message', (_ch, rawMsg) => {
+      clearTimeout(timeoutId);
+      sub.disconnect();
+      const msg = JSON.parse(rawMsg);
+      if (msg.type === 'result') {
+        res.json({ ...msg.data, model });
+      } else if (msg.type === 'error') {
+        res.status(502).json({ error: msg.message });
+      }
+    });
+  }
 });
 
 module.exports = router;

@@ -1,5 +1,6 @@
 const crypto = require('crypto');
 const { getKeyByHash } = require('../services/postgres');
+const { getCachedKey, cacheKey } = require('../services/redis');
 const config = require('../config');
 
 function hashKey(rawKey) {
@@ -18,7 +19,16 @@ async function auth(req, res, next) {
   }
 
   const keyHash = hashKey(rawKey);
-  const record = await getKeyByHash(keyHash).catch(() => null);
+
+  let record = await getCachedKey(keyHash).catch(() => null);
+
+  if (!record) {
+    record = await getKeyByHash(keyHash).catch(() => null);
+    if (record) {
+      // Cache async — don't block the request
+      cacheKey(keyHash, record).catch(() => {});
+    }
+  }
 
   if (!record || !record.is_active) {
     return res.status(401).json({ error: 'Invalid API key' });

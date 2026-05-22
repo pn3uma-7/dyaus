@@ -1,0 +1,15 @@
+[Unit]
+Description=Dyaus Node.js API
+After=network.target postgresql.service rabbitmq-server.service redis-server.service llama-server.service
+
+[Service]
+Type=simple
+User=pn3uma
+WorkingDirectory=/home/pn3uma/dyaus/api
+ExecStart=/home/pn3uma/.nvm/versions/node/v24.15.0/bin/node src/index.js
+Restart=on-failure
+RestartSec=5
+EnvironmentFile=/home/pn3uma/dyaus/api/.env
+
+[Install]
+WantedBy=multi-user.target

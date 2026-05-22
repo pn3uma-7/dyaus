@@ -1,11 +1,14 @@
-const { Pool } = require('pg');
+const { Pool, types } = require('pg');
 const config = require('../config');
+
+// Return BIGINT (OID 20) as JS number — credit_balance never exceeds Number.MAX_SAFE_INTEGER
+types.setTypeParser(20, (val) => parseInt(val, 10));
 
 const pool = new Pool(config.pg);
 
 async function getKeyByHash(keyHash) {
   const result = await pool.query(
-    `SELECT k.id, k.user_id, k.is_active, u.credit_balance
+    `SELECT k.id, k.user_id, k.is_active, k.rate_limit_rpm, u.credit_balance
      FROM api_keys k
      JOIN users u ON u.id = k.user_id
      WHERE k.key_hash = $1`,

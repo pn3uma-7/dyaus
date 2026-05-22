@@ -12,6 +12,16 @@ module.exports = {
     password: process.env.PG_PASSWORD,
   },
 
+  redis: {
+    host: process.env.REDIS_HOST || 'localhost',
+    port: parseInt(process.env.REDIS_PORT) || 6379,
+    password: process.env.REDIS_PASSWORD || undefined,
+  },
+
+  rabbitmq: {
+    url: process.env.RABBITMQ_URL || 'amqp://localhost',
+  },
+
   inference: {
     base: process.env.INFERENCE_BASE || 'http://localhost:8080',
     defaultModel: process.env.DEFAULT_MODEL || 'qwen3-30b',
@@ -20,4 +30,5 @@ module.exports = {
   outputTokenMultiplier: parseInt(process.env.OUTPUT_TOKEN_MULTIPLIER) || 2,
   apiKeyPrefix: process.env.API_KEY_PREFIX || 'sk-dyaus-',
   adminSecret: process.env.ADMIN_SECRET,
+  keyCacheTtlSeconds: 60,
 };

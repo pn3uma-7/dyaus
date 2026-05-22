@@ -1,6 +1,8 @@
 const express = require('express');
 const config = require('./config');
 const { pool } = require('./services/postgres');
+const { redisClient } = require('./services/redis');
+const { close: closeQueue } = require('./services/queue');
 const chatRouter = require('./routes/chat');
 const healthRouter = require('./routes/health');
 
@@ -15,6 +17,6 @@ app.listen(config.port, () => {
 });
 
 process.on('SIGTERM', async () => {
-  await pool.end();
+  await Promise.allSettled([pool.end(), redisClient.quit(), closeQueue()]);
   process.exit(0);
 });

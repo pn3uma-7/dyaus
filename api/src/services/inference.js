@@ -5,11 +5,7 @@ async function chatCompletion(body) {
   const response = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      ...body,
-      model: 'local',
-      stream: false,
-    }),
+    body: JSON.stringify({ ...body, model: 'local', stream: false }),
   });
 
   if (!response.ok) {
@@ -20,6 +16,25 @@ async function chatCompletion(body) {
   }
 
   return response.json();
+}
+
+// Returns the raw Response for streaming — caller must consume response.body
+async function chatStream(body) {
+  const url = `${config.inference.base}/v1/chat/completions`;
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ...body, model: 'local', stream: true }),
+  });
+
+  if (!response.ok) {
+    const text = await response.text();
+    const err = new Error(`Inference error ${response.status}: ${text}`);
+    err.status = response.status;
+    throw err;
+  }
+
+  return response;
 }
 
 async function isAvailable() {
@@ -33,4 +48,4 @@ async function isAvailable() {
   }
 }
 
-module.exports = { chatCompletion, isAvailable };
+module.exports = { chatCompletion, chatStream, isAvailable };

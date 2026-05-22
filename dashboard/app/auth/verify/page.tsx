@@ -13,8 +13,8 @@ export default async function VerifyPage({
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-sky-100 via-sky-50 to-amber-100">
       <div className="w-full max-w-sm px-6">
         <div className="text-center mb-8">
-          <div className="w-44 h-44 rounded-full bg-amber-50 border-2 border-amber-300 shadow-lg flex items-center justify-center mx-auto mb-5">
-            <img src="/dyaus.png" alt="Dyaus" className="h-36 w-36 object-contain" />
+          <div className="w-44 h-44 rounded-full overflow-hidden border-2 border-amber-300 shadow-lg mx-auto mb-5">
+            <img src="/dyaus.png" alt="Dyaus" className="w-full h-full object-contain bg-white" />
           </div>
           <h1 className="text-3xl font-bold text-slate-900">Dyaus</h1>
           <p className="mt-1 text-sm text-slate-500">Click below to complete sign-in</p>

@@ -10,8 +10,8 @@ export default function LoginPage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-sky-100 via-sky-50 to-amber-100">
         <div className="w-full max-w-sm space-y-5 px-6 text-center">
-          <div className="w-44 h-44 rounded-full bg-amber-50 border-2 border-amber-300 shadow-lg flex items-center justify-center mx-auto">
-            <img src="/dyaus.png" alt="Dyaus" className="h-36 w-36 object-contain" />
+          <div className="w-44 h-44 rounded-full overflow-hidden border-2 border-amber-300 shadow-lg mx-auto">
+            <img src="/dyaus.png" alt="Dyaus" className="w-full h-full object-contain bg-white" />
           </div>
           <div>
             <h2 className="text-xl font-semibold text-slate-900">Check your email</h2>

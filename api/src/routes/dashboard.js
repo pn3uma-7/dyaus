@@ -1,6 +1,8 @@
 const crypto = require('crypto');
+const { Readable } = require('stream');
 const express = require('express');
 const { sessionAuth } = require('../middleware/sessionAuth');
+const { chatStream } = require('../services/inference');
 const {
   getUserById, getKeysByUserId, createKey, deactivateKey, getUsageByUser,
 } = require('../services/postgres');
@@ -55,6 +57,41 @@ router.get('/me/usage', async (req, res) => {
   const offset = parseInt(req.query.offset) || 0;
   const rows = await getUsageByUser(req.session.userId, limit, offset).catch(() => []);
   res.json(rows);
+});
+
+// POST /dashboard/test-chat
+// Free streaming chat — no credits charged, max 512 tokens, direct llama-server call
+router.post('/test-chat', async (req, res) => {
+  const { messages } = req.body;
+  if (!Array.isArray(messages) || messages.length === 0) {
+    return res.status(400).json({ error: 'messages required' });
+  }
+
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  res.flushHeaders();
+
+  try {
+    const response = await chatStream({ messages, max_tokens: 512 });
+    const nodeStream = Readable.fromWeb(response.body);
+
+    let buffer = '';
+    for await (const chunk of nodeStream) {
+      buffer += chunk.toString('utf8');
+      const lines = buffer.split('\n');
+      buffer = lines.pop();
+      for (const line of lines) {
+        if (line.trim()) res.write(line + '\n');
+      }
+    }
+    if (buffer.trim()) res.write(buffer + '\n');
+    res.write('\n');
+  } catch (err) {
+    res.write('data: {"error":"Inference unavailable"}\n\n');
+  }
+
+  res.end();
 });
 
 module.exports = router;

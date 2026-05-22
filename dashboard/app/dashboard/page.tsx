@@ -4,6 +4,7 @@ import { dashGet } from '../lib/api';
 import { logoutAction } from '../actions';
 import { KeysSection } from './KeysSection';
 import { UsageSection } from './UsageSection';
+import { ChatSection } from './ChatSection';
 
 export default async function DashboardPage() {
   const jwt = await getSessionJwt();
@@ -43,6 +44,7 @@ export default async function DashboardPage() {
         </section>
 
         <KeysSection keys={keys} />
+        <ChatSection />
         <UsageSection rows={usage} />
       </main>
     </div>

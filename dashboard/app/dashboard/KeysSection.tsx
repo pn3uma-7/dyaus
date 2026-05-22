@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState } from 'react';
+import { useActionState, useState, useEffect } from 'react';
 import { createKeyAction, revokeKeyAction } from '../actions';
 
 type Key = {
@@ -15,21 +15,37 @@ type Key = {
 
 export function KeysSection({ keys }: { keys: Key[] }) {
   const [createState, createAction, creating] = useActionState(createKeyAction, null);
+  const [copied, setCopied] = useState(false);
+  const [dismissed, setDismissed] = useState(false);
+
+  useEffect(() => {
+    if (createState?.rawKey) {
+      setCopied(false);
+      setDismissed(false);
+    }
+  }, [createState?.rawKey]);
+
+  function handleCopy() {
+    if (!createState?.rawKey) return;
+    navigator.clipboard.writeText(createState.rawKey);
+    setCopied(true);
+    setTimeout(() => setDismissed(true), 2000);
+  }
 
   return (
     <section className="rounded-lg border border-gray-800 bg-gray-900 p-6 space-y-4">
       <h2 className="font-semibold text-white">API Keys</h2>
 
       {/* New key display */}
-      {createState?.rawKey && (
+      {createState?.rawKey && !dismissed && (
         <div className="rounded-md border border-green-700 bg-green-950 p-4 space-y-2">
           <p className="text-sm font-medium text-green-300">Key created — copy it now, it won&apos;t be shown again.</p>
           <code className="block break-all text-sm text-green-200 font-mono">{createState.rawKey}</code>
           <button
-            onClick={() => navigator.clipboard.writeText(createState.rawKey!)}
+            onClick={handleCopy}
             className="text-xs text-green-400 hover:text-green-300 underline"
           >
-            Copy to clipboard
+            {copied ? 'Copied!' : 'Copy to clipboard'}
           </button>
         </div>
       )}

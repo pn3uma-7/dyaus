@@ -94,7 +94,7 @@ async function deactivateKey(keyId, userId = null) {
 
 async function getUsageByUser(userId, limit = 50, offset = 0) {
   const result = await pool.query(
-    `SELECT model, input_tokens, output_tokens, credits_deducted, duration_ms, created_at,
+    `SELECT model, input_tokens, output_tokens, credits_deducted, duration_ms, u.created_at,
             k.key_prefix
      FROM usage_log u
      JOIN api_keys k ON k.id = u.key_id

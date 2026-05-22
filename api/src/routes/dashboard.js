@@ -55,8 +55,13 @@ router.delete('/me/keys/:id', async (req, res) => {
 router.get('/me/usage', async (req, res) => {
   const limit = Math.min(parseInt(req.query.limit) || 50, 200);
   const offset = parseInt(req.query.offset) || 0;
-  const rows = await getUsageByUser(req.session.userId, limit, offset).catch(() => []);
-  res.json(rows);
+  try {
+    const rows = await getUsageByUser(req.session.userId, limit, offset);
+    res.json(rows);
+  } catch (err) {
+    console.error('Usage query error for userId', req.session.userId, ':', err.message);
+    res.json([]);
+  }
 });
 
 // POST /dashboard/test-chat

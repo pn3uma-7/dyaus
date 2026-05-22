@@ -5,6 +5,7 @@ import { logoutAction } from '../actions';
 import { KeysSection } from './KeysSection';
 import { UsageSection } from './UsageSection';
 import { ChatSection } from './ChatSection';
+import { QuickStartSection } from './QuickStartSection';
 
 export default async function DashboardPage() {
   const jwt = await getSessionJwt();
@@ -47,6 +48,7 @@ export default async function DashboardPage() {
         </section>
 
         <KeysSection keys={keys} />
+        <QuickStartSection apiUrl={process.env.API_URL ?? 'https://api.ameytambe.rocks'} />
         <ChatSection />
         <UsageSection rows={usage} />
       </main>

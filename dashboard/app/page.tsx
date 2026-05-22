@@ -34,7 +34,7 @@ export default function LoginPage() {
         <div className="text-center mb-8">
           <img src="/dyaus.png" alt="Dyaus" className="h-28 w-28 object-contain mx-auto mb-4" />
           <h1 className="text-3xl font-bold text-slate-900">Dyaus</h1>
-          <p className="mt-1 text-sm text-slate-500">Sky Father · AI Inference</p>
+          <p className="mt-1 text-sm text-slate-500">OpenAI-Compatible · Edge GPU Inference</p>
         </div>
 
         <div className="bg-white rounded-2xl border border-sky-100 shadow-sm p-6 space-y-4">

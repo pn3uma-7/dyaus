@@ -27,6 +27,19 @@ module.exports = {
     defaultModel: process.env.DEFAULT_MODEL || 'qwen3-30b',
   },
 
+  auth: {
+    jwtSecret: process.env.JWT_SECRET,
+    jwtExpiresIn: '30d',
+    magicLinkTtlSeconds: 900, // 15 minutes
+  },
+
+  resend: {
+    apiKey: process.env.RESEND_API_KEY,
+    from: process.env.RESEND_FROM || 'noreply@ameytambe.rocks',
+  },
+
+  dashboardUrl: process.env.DASHBOARD_URL || 'http://localhost:3000',
+
   outputTokenMultiplier: parseInt(process.env.OUTPUT_TOKEN_MULTIPLIER) || 2,
   apiKeyPrefix: process.env.API_KEY_PREFIX || 'sk-dyaus-',
   adminSecret: process.env.ADMIN_SECRET,

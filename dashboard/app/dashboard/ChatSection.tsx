@@ -5,6 +5,8 @@ import { useState, useRef, useEffect } from 'react';
 type Message = { role: 'user' | 'assistant'; content: string };
 
 export function ChatSection() {
+  const [apiKey, setApiKey] = useState('');
+  const [showKey, setShowKey] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [streaming, setStreaming] = useState(false);
@@ -19,6 +21,11 @@ export function ChatSection() {
     const text = input.trim();
     if (!text || streaming) return;
 
+    if (!apiKey.trim()) {
+      setError('Paste your API key above before sending.');
+      return;
+    }
+
     const next: Message[] = [...messages, { role: 'user', content: text }];
     setMessages(next);
     setInput('');
@@ -32,10 +39,34 @@ export function ChatSection() {
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: next }),
+        body: JSON.stringify({ messages: next, apiKey: apiKey.trim() }),
       });
 
-      if (!res.ok || !res.body) throw new Error('Request failed');
+      if (res.status === 401 || res.status === 403) {
+        setError('Key is invalid or has been revoked.');
+        setMessages((prev) => prev.slice(0, -1));
+        setStreaming(false);
+        return;
+      }
+
+      if (res.status === 402) {
+        setError('Insufficient credits.');
+        setMessages((prev) => prev.slice(0, -1));
+        setStreaming(false);
+        return;
+      }
+
+      if (res.status === 429) {
+        setError('Rate limit exceeded. Try again in a moment.');
+        setMessages((prev) => prev.slice(0, -1));
+        setStreaming(false);
+        return;
+      }
+
+      if (!res.ok || !res.body) {
+        const msg = await res.text().catch(() => '');
+        throw new Error(msg || 'Request failed');
+      }
 
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
@@ -69,20 +100,21 @@ export function ChatSection() {
           } catch { /* non-JSON line */ }
         }
       }
-    } catch {
-      setError('Something went wrong. Is the inference server running?');
-      setMessages((prev) => prev.slice(0, -1)); // remove empty assistant bubble
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : '';
+      setError(msg || 'Something went wrong. Is the inference server running?');
+      setMessages((prev) => prev.slice(0, -1));
     }
 
     setStreaming(false);
   }
 
   return (
-    <section className="rounded-lg border border-gray-800 bg-gray-900 flex flex-col" style={{ height: '520px' }}>
+    <section className="rounded-lg border border-gray-800 bg-gray-900 flex flex-col" style={{ height: '560px' }}>
       <div className="px-6 py-4 border-b border-gray-800 flex items-center justify-between">
         <div>
           <h2 className="font-semibold text-white">Test Chat</h2>
-          <p className="text-xs text-gray-500 mt-0.5">Free — does not use your credits</p>
+          <p className="text-xs text-gray-500 mt-0.5">Uses your API key · credits are charged</p>
         </div>
         {messages.length > 0 && (
           <button
@@ -94,11 +126,28 @@ export function ChatSection() {
         )}
       </div>
 
+      {/* API key input */}
+      <div className="px-4 py-2 border-b border-gray-800 flex gap-2 items-center">
+        <input
+          value={apiKey}
+          onChange={(e) => setApiKey(e.target.value)}
+          type={showKey ? 'text' : 'password'}
+          placeholder="Paste your API key (sk-dyaus-…)"
+          className="flex-1 rounded-md border border-gray-700 bg-gray-800 px-3 py-1.5 text-xs text-white placeholder-gray-500 focus:border-indigo-500 focus:outline-none font-mono"
+        />
+        <button
+          onClick={() => setShowKey((v) => !v)}
+          className="text-xs text-gray-500 hover:text-gray-300 shrink-0"
+        >
+          {showKey ? 'Hide' : 'Show'}
+        </button>
+      </div>
+
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
         {messages.length === 0 && (
           <p className="text-sm text-gray-600 text-center mt-8">
-            Send a message to test the model
+            Paste an API key above and send a message to test it
           </p>
         )}
         {messages.map((m, i) => (

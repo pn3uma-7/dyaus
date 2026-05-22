@@ -91,19 +91,12 @@ async function handleStream(body, redisChannel, start, model, keyRecord) {
 }
 
 function doAccounting(keyRecord, model, inputTokens, outputTokens, creditsDeducted, durationMs) {
-  Promise.all([
-    deductCredits(keyRecord.user_id, creditsDeducted),
-    updateLastUsed(keyRecord.id),
-    logUsage({
-      userId: keyRecord.user_id,
-      keyId: keyRecord.id,
-      model,
-      inputTokens,
-      outputTokens,
-      creditsDeducted,
-      durationMs,
-    }),
-  ]).catch((err) => console.error('Worker accounting error:', err));
+  deductCredits(keyRecord.user_id, creditsDeducted)
+    .catch((err) => console.error('Worker: deductCredits failed:', err.message));
+  updateLastUsed(keyRecord.id)
+    .catch((err) => console.error('Worker: updateLastUsed failed:', err.message));
+  logUsage({ userId: keyRecord.user_id, keyId: keyRecord.id, model, inputTokens, outputTokens, creditsDeducted, durationMs })
+    .catch((err) => console.error('Worker: logUsage failed:', err.message));
 }
 
 async function start() {

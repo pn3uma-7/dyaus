@@ -7,18 +7,27 @@ export async function POST(request: Request) {
   if (!jwt) return new Response('Unauthorized', { status: 401 });
 
   const body = await request.json();
+  const { messages, apiKey } = body;
 
-  const upstream = await fetch(`${API_URL}/dashboard/test-chat`, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${jwt}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(body),
-  });
+  if (!apiKey?.trim()) return new Response('API key required', { status: 400 });
+
+  let upstream: Response;
+  try {
+    upstream = await fetch(`${API_URL}/v1/chat/completions`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${apiKey.trim()}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ messages, stream: true }),
+    });
+  } catch {
+    return new Response('Inference server unreachable', { status: 502 });
+  }
 
   if (!upstream.ok) {
-    return new Response('Inference unavailable', { status: 502 });
+    const text = await upstream.text().catch(() => 'Request failed');
+    return new Response(text, { status: upstream.status });
   }
 
   return new Response(upstream.body, {

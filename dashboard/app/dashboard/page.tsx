@@ -20,10 +20,10 @@ export default async function DashboardPage() {
   if (!user) redirect('/');
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-amber-50">
-      <header className="bg-white border-b border-sky-100 px-6 py-4 flex items-center justify-between shadow-sm">
+    <div className="min-h-screen bg-gradient-to-br from-sky-100 via-sky-50 to-amber-100">
+      <header className="bg-white/85 backdrop-blur-sm border-b border-sky-200 px-6 py-4 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-3">
-          <img src="/dyaus.png" alt="Dyaus" className="h-12 w-12 object-contain" />
+          <img src="/dyaus.png" alt="Dyaus" className="h-14 w-14 object-contain drop-shadow-sm" />
           <h1 className="font-bold text-lg text-slate-900">Dyaus</h1>
         </div>
         <div className="flex items-center gap-4">
@@ -37,7 +37,7 @@ export default async function DashboardPage() {
       </header>
 
       <main className="max-w-4xl mx-auto px-6 py-8 space-y-6">
-        <section className="rounded-2xl border border-amber-100 bg-white shadow-sm p-6">
+        <section className="rounded-2xl border border-amber-200 bg-white/85 backdrop-blur-sm shadow-sm p-6">
           <p className="text-sm text-slate-500">Credit Balance</p>
           <p className="mt-1 text-4xl font-bold tabular-nums text-slate-900">
             {Number(user.credit_balance).toLocaleString()}

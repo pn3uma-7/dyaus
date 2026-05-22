@@ -23,7 +23,7 @@ type User = {
 
 function StatCard({ label, value }: { label: string; value: number }) {
   return (
-    <div className="rounded-xl border border-sky-100 bg-white shadow-sm p-4">
+    <div className="rounded-xl border border-sky-200 bg-white/85 backdrop-blur-sm shadow-sm p-4">
       <p className="text-xs text-slate-500">{label}</p>
       <p className="mt-1 text-2xl font-bold tabular-nums text-slate-900">{value.toLocaleString()}</p>
     </div>
@@ -36,7 +36,7 @@ function UserRow({ user }: { user: User }) {
   const [keyState, keyAction, keyPending] = useActionState(adminCreateKeyAction, null);
 
   return (
-    <div className="rounded-xl border border-sky-100 bg-white p-4 space-y-3 shadow-sm">
+    <div className="rounded-xl border border-sky-200 bg-white/85 backdrop-blur-sm p-4 space-y-3 shadow-sm">
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div>
           <div className="flex items-center gap-2">
@@ -64,7 +64,7 @@ function UserRow({ user }: { user: User }) {
           name="amount"
           type="number"
           placeholder="±credits (e.g. 10000)"
-          className="rounded-lg border border-sky-200 bg-sky-50 px-2 py-1 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-amber-400 w-44"
+          className="rounded-lg border border-sky-300 bg-white px-2 py-1 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-amber-400 w-44"
         />
         <button
           type="submit"
@@ -131,7 +131,7 @@ function UserRow({ user }: { user: User }) {
               <input
                 name="label"
                 placeholder="Label (optional)"
-                className="rounded-lg border border-sky-200 bg-sky-50 px-2 py-1 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-amber-400"
+                className="rounded-lg border border-sky-300 bg-white px-2 py-1 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-amber-400"
               />
               <input
                 name="rate_limit_rpm"
@@ -139,7 +139,7 @@ function UserRow({ user }: { user: User }) {
                 defaultValue={10}
                 min={1}
                 placeholder="RPM"
-                className="w-16 rounded-lg border border-sky-200 bg-sky-50 px-2 py-1 text-xs text-slate-900 focus:outline-none focus:border-amber-400"
+                className="w-16 rounded-lg border border-sky-300 bg-white px-2 py-1 text-xs text-slate-900 focus:outline-none focus:border-amber-400"
               />
               <button
                 type="submit"
@@ -160,10 +160,10 @@ export function AdminPanel({ stats, users }: { stats: Stats; users: User[] }) {
   const [newUserState, newUserAction, creatingUser] = useActionState(createUserAction, null);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-amber-50">
-      <header className="bg-white border-b border-sky-100 px-6 py-4 flex items-center justify-between shadow-sm">
+    <div className="min-h-screen bg-gradient-to-br from-sky-100 via-sky-50 to-amber-100">
+      <header className="bg-white/85 backdrop-blur-sm border-b border-sky-200 px-6 py-4 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-3">
-          <img src="/dyaus.png" alt="Dyaus" className="h-12 w-12 object-contain" />
+          <img src="/dyaus.png" alt="Dyaus" className="h-14 w-14 object-contain drop-shadow-sm" />
           <h1 className="font-bold text-lg text-slate-900">Dyaus Admin</h1>
         </div>
         <form action={adminLogoutAction}>
@@ -182,22 +182,22 @@ export function AdminPanel({ stats, users }: { stats: Stats; users: User[] }) {
         </div>
 
         {/* Users */}
-        <section className="rounded-2xl border border-sky-100 bg-sky-50 p-6 space-y-4 shadow-sm">
+        <section className="rounded-2xl border border-sky-200 bg-sky-100/60 backdrop-blur-sm p-6 space-y-4 shadow-sm">
           <h2 className="font-semibold text-slate-900">Users ({users.length})</h2>
 
           {/* Add user */}
-          <form action={newUserAction} className="flex flex-wrap gap-2 pb-4 border-b border-sky-100">
+          <form action={newUserAction} className="flex flex-wrap gap-2 pb-4 border-b border-sky-200">
             <input
               name="email"
               type="email"
               placeholder="email@example.com"
               required
-              className="rounded-lg border border-sky-200 bg-white px-3 py-1.5 text-sm text-slate-900 placeholder-slate-400 focus:border-amber-400 focus:outline-none"
+              className="rounded-lg border border-sky-300 bg-white px-3 py-1.5 text-sm text-slate-900 placeholder-slate-400 focus:border-amber-400 focus:outline-none"
             />
             <input
               name="name"
               placeholder="Name (optional)"
-              className="rounded-lg border border-sky-200 bg-white px-3 py-1.5 text-sm text-slate-900 placeholder-slate-400 focus:border-amber-400 focus:outline-none"
+              className="rounded-lg border border-sky-300 bg-white px-3 py-1.5 text-sm text-slate-900 placeholder-slate-400 focus:border-amber-400 focus:outline-none"
             />
             <button
               type="submit"

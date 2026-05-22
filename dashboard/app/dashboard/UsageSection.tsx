@@ -10,7 +10,7 @@ type UsageRow = {
 
 export function UsageSection({ rows }: { rows: UsageRow[] }) {
   return (
-    <section className="rounded-2xl border border-sky-100 bg-white shadow-sm p-6 space-y-4">
+    <section className="rounded-2xl border border-sky-200 bg-white/85 backdrop-blur-sm shadow-sm p-6 space-y-4">
       <h2 className="font-semibold text-slate-900">Recent Usage</h2>
 
       {rows.length === 0 ? (
@@ -19,7 +19,7 @@ export function UsageSection({ rows }: { rows: UsageRow[] }) {
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-left text-xs text-slate-400 border-b border-sky-100">
+              <tr className="text-left text-xs text-slate-400 border-b border-sky-200">
                 <th className="pb-2 font-medium">Time</th>
                 <th className="pb-2 font-medium">Key</th>
                 <th className="pb-2 font-medium">Model</th>
@@ -29,7 +29,7 @@ export function UsageSection({ rows }: { rows: UsageRow[] }) {
                 <th className="pb-2 font-medium text-right">ms</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-sky-50">
+            <tbody className="divide-y divide-sky-100">
               {rows.map((r, i) => (
                 <tr key={i} className="text-slate-700">
                   <td className="py-2 text-xs text-slate-400 whitespace-nowrap">

@@ -110,8 +110,8 @@ export function ChatSection() {
   }
 
   return (
-    <section className="rounded-2xl border border-sky-100 bg-white shadow-sm flex flex-col" style={{ height: '560px' }}>
-      <div className="px-6 py-4 border-b border-sky-100 flex items-center justify-between">
+    <section className="rounded-2xl border border-sky-200 bg-white/85 backdrop-blur-sm shadow-sm flex flex-col" style={{ height: '560px' }}>
+      <div className="px-6 py-4 border-b border-sky-200 flex items-center justify-between">
         <div>
           <h2 className="font-semibold text-slate-900">Test Chat</h2>
           <p className="text-xs text-slate-400 mt-0.5">Uses your API key · credits are charged</p>
@@ -127,7 +127,7 @@ export function ChatSection() {
       </div>
 
       {/* API key input */}
-      <div className="px-4 py-2 border-b border-sky-100 flex gap-2 items-center bg-sky-50">
+      <div className="px-4 py-2 border-b border-sky-200 flex gap-2 items-center bg-sky-100/60">
         <input
           value={apiKey}
           onChange={(e) => setApiKey(e.target.value)}
@@ -156,7 +156,7 @@ export function ChatSection() {
               className={`max-w-[80%] rounded-xl px-4 py-2 text-sm whitespace-pre-wrap ${
                 m.role === 'user'
                   ? 'bg-amber-500 text-white'
-                  : 'bg-sky-50 border border-sky-100 text-slate-800'
+                  : 'bg-sky-100 border border-sky-200 text-slate-800'
               }`}
             >
               {m.content}

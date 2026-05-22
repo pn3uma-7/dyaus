@@ -33,7 +33,7 @@ export function KeysSection({ keys }: { keys: Key[] }) {
   }
 
   return (
-    <section className="rounded-2xl border border-sky-100 bg-white shadow-sm p-6 space-y-4">
+    <section className="rounded-2xl border border-sky-200 bg-white/85 backdrop-blur-sm shadow-sm p-6 space-y-4">
       <h2 className="font-semibold text-slate-900">API Keys</h2>
 
       {createState?.rawKey && !dismissed && (
@@ -58,7 +58,7 @@ export function KeysSection({ keys }: { keys: Key[] }) {
           <p className="text-sm text-slate-400">No keys yet.</p>
         )}
         {keys.map((k) => (
-          <div key={k.id} className="flex items-center justify-between rounded-xl bg-sky-50 border border-sky-100 px-4 py-3">
+          <div key={k.id} className="flex items-center justify-between rounded-xl bg-sky-100/60 border border-sky-200 px-4 py-3">
             <div>
               <span className="font-mono text-sm text-slate-800">{k.key_prefix}…</span>
               {k.label && <span className="ml-2 text-xs text-slate-500">{k.label}</span>}
@@ -87,11 +87,11 @@ export function KeysSection({ keys }: { keys: Key[] }) {
         ))}
       </div>
 
-      <form action={createAction} className="flex flex-wrap gap-2 pt-2 border-t border-sky-100">
+      <form action={createAction} className="flex flex-wrap gap-2 pt-2 border-t border-sky-200">
         <input
           name="label"
           placeholder="Label (optional)"
-          className="rounded-lg border border-sky-200 bg-white px-3 py-1.5 text-sm text-slate-900 placeholder-slate-400 focus:border-amber-400 focus:outline-none"
+          className="rounded-lg border border-sky-300 bg-white px-3 py-1.5 text-sm text-slate-900 placeholder-slate-400 focus:border-amber-400 focus:outline-none"
         />
         <input
           name="rate_limit_rpm"
@@ -99,7 +99,7 @@ export function KeysSection({ keys }: { keys: Key[] }) {
           defaultValue={10}
           min={1}
           max={60}
-          className="w-24 rounded-lg border border-sky-200 bg-white px-3 py-1.5 text-sm text-slate-900 focus:border-amber-400 focus:outline-none"
+          className="w-24 rounded-lg border border-sky-300 bg-white px-3 py-1.5 text-sm text-slate-900 focus:border-amber-400 focus:outline-none"
         />
         <button
           type="submit"

@@ -89,7 +89,7 @@ console.log(response.choices[0].message.content);`;
   const snippets: Record<Tab, string> = { curl: curlExample, python: pythonExample, node: nodeExample };
 
   return (
-    <section className="rounded-2xl border border-sky-100 bg-white shadow-sm p-6 space-y-5">
+    <section className="rounded-2xl border border-sky-200 bg-white/85 backdrop-blur-sm shadow-sm p-6 space-y-5">
       <div>
         <h2 className="font-semibold text-slate-900">Quick Start</h2>
         <p className="text-xs text-slate-400 mt-0.5">Everything you need to connect your app in minutes</p>
@@ -97,14 +97,14 @@ console.log(response.choices[0].message.content);`;
 
       {/* Endpoint + Model */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <div className="rounded-xl bg-sky-50 border border-sky-100 px-4 py-3">
+        <div className="rounded-xl bg-sky-100/60 border border-sky-200 px-4 py-3">
           <p className="text-xs text-slate-400 mb-1 font-medium uppercase tracking-wide">Base URL</p>
           <div className="flex items-center justify-between">
             <code className="text-sm text-slate-800 font-mono break-all">{baseUrl}</code>
             <CopyButton text={baseUrl} inline />
           </div>
         </div>
-        <div className="rounded-xl bg-sky-50 border border-sky-100 px-4 py-3">
+        <div className="rounded-xl bg-sky-100/60 border border-sky-200 px-4 py-3">
           <p className="text-xs text-slate-400 mb-1 font-medium uppercase tracking-wide">Model</p>
           <div className="flex items-center justify-between">
             <code className="text-sm text-slate-800 font-mono">{model}</code>
@@ -114,7 +114,7 @@ console.log(response.choices[0].message.content);`;
       </div>
 
       {/* Jan.ai / compatible app hint */}
-      <div className="rounded-xl bg-amber-50 border border-amber-100 px-4 py-3 text-xs text-amber-800 space-y-1">
+      <div className="rounded-xl bg-amber-100/70 border border-amber-200 px-4 py-3 text-xs text-amber-800 space-y-1">
         <p className="font-semibold">Jan.ai / LM Studio / OpenAI-compatible apps</p>
         <p>Set <span className="font-mono bg-amber-100 px-1 rounded">API URL</span> → <span className="font-mono">{baseUrl}</span> &nbsp;·&nbsp; <span className="font-mono bg-amber-100 px-1 rounded">Model</span> → <span className="font-mono">{model}</span> &nbsp;·&nbsp; paste your API key and you&apos;re live.</p>
       </div>
@@ -130,7 +130,7 @@ console.log(response.choices[0].message.content);`;
                 className={`px-3 py-1 text-xs rounded-lg font-medium transition-colors ${
                   tab === t
                     ? 'bg-amber-500 text-white'
-                    : 'text-slate-500 hover:text-slate-800 border border-sky-100 bg-sky-50'
+                    : 'text-slate-500 hover:text-slate-800 border border-sky-200 bg-sky-100/60'
                 }`}
               >
                 {t === 'curl' ? 'cURL' : t === 'python' ? 'Python' : 'Node.js'}

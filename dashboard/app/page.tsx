@@ -8,16 +8,18 @@ export default function LoginPage() {
 
   if (state?.sent) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-950">
-        <div className="w-full max-w-sm space-y-4 px-6 text-center">
-          <div className="text-4xl">📬</div>
-          <h2 className="text-xl font-semibold text-white">Check your email</h2>
-          <p className="text-sm text-gray-400">
-            We sent a sign-in link. It expires in 15 minutes.
-          </p>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-sky-50 via-white to-amber-50">
+        <div className="w-full max-w-sm space-y-5 px-6 text-center">
+          <img src="/dyaus.png" alt="Dyaus" className="h-16 w-16 object-contain mx-auto" />
+          <div>
+            <h2 className="text-xl font-semibold text-slate-900">Check your email</h2>
+            <p className="mt-1 text-sm text-slate-500">
+              We sent a sign-in link. It expires in 15 minutes.
+            </p>
+          </div>
           <button
             onClick={() => window.location.reload()}
-            className="text-sm text-gray-500 hover:text-gray-300 underline"
+            className="text-sm text-sky-600 hover:text-sky-500 underline"
           >
             Try a different email
           </button>
@@ -27,42 +29,45 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-950">
-      <div className="w-full max-w-sm space-y-6 px-6">
-        <div>
-          <h1 className="text-2xl font-bold text-white">Dyaus</h1>
-          <p className="mt-1 text-sm text-gray-400">Enter your email to sign in</p>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-sky-50 via-white to-amber-50">
+      <div className="w-full max-w-sm px-6">
+        <div className="text-center mb-8">
+          <img src="/dyaus.png" alt="Dyaus" className="h-20 w-20 object-contain mx-auto mb-4" />
+          <h1 className="text-3xl font-bold text-slate-900">Dyaus</h1>
+          <p className="mt-1 text-sm text-slate-500">Sky Father · AI Inference</p>
         </div>
 
-        <form action={action} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">Email</label>
-            <input
-              name="email"
-              type="email"
-              placeholder="you@example.com"
-              required
-              autoFocus
-              className="w-full rounded-md border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-white placeholder-gray-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-            />
-          </div>
+        <div className="bg-white rounded-2xl border border-sky-100 shadow-sm p-6 space-y-4">
+          <form action={action} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
+              <input
+                name="email"
+                type="email"
+                placeholder="you@example.com"
+                required
+                autoFocus
+                className="w-full rounded-lg border border-sky-200 bg-white px-3 py-2 text-sm text-slate-900 placeholder-slate-400 focus:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-100"
+              />
+            </div>
 
-          {state?.error && (
-            <p className="text-sm text-red-400">{state.error}</p>
-          )}
+            {state?.error && (
+              <p className="text-sm text-red-500">{state.error}</p>
+            )}
 
-          <button
-            type="submit"
-            disabled={pending}
-            className="w-full rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {pending ? 'Sending…' : 'Send sign-in link'}
-          </button>
-        </form>
+            <button
+              type="submit"
+              disabled={pending}
+              className="w-full rounded-lg bg-amber-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-amber-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              {pending ? 'Sending…' : 'Send sign-in link'}
+            </button>
+          </form>
+        </div>
 
-        <p className="text-xs text-gray-500 text-center">
+        <p className="mt-4 text-xs text-slate-400 text-center">
           Admin?{' '}
-          <a href="/admin" className="text-gray-400 hover:text-white underline">
+          <a href="/admin" className="text-sky-600 hover:text-sky-500 underline">
             Admin panel
           </a>
         </p>

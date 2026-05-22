@@ -110,16 +110,16 @@ export function ChatSection() {
   }
 
   return (
-    <section className="rounded-lg border border-gray-800 bg-gray-900 flex flex-col" style={{ height: '560px' }}>
-      <div className="px-6 py-4 border-b border-gray-800 flex items-center justify-between">
+    <section className="rounded-2xl border border-sky-100 bg-white shadow-sm flex flex-col" style={{ height: '560px' }}>
+      <div className="px-6 py-4 border-b border-sky-100 flex items-center justify-between">
         <div>
-          <h2 className="font-semibold text-white">Test Chat</h2>
-          <p className="text-xs text-gray-500 mt-0.5">Uses your API key · credits are charged</p>
+          <h2 className="font-semibold text-slate-900">Test Chat</h2>
+          <p className="text-xs text-slate-400 mt-0.5">Uses your API key · credits are charged</p>
         </div>
         {messages.length > 0 && (
           <button
             onClick={() => { setMessages([]); setError(null); }}
-            className="text-xs text-gray-500 hover:text-gray-300"
+            className="text-xs text-slate-400 hover:text-slate-700"
           >
             Clear
           </button>
@@ -127,17 +127,17 @@ export function ChatSection() {
       </div>
 
       {/* API key input */}
-      <div className="px-4 py-2 border-b border-gray-800 flex gap-2 items-center">
+      <div className="px-4 py-2 border-b border-sky-100 flex gap-2 items-center bg-sky-50">
         <input
           value={apiKey}
           onChange={(e) => setApiKey(e.target.value)}
           type={showKey ? 'text' : 'password'}
           placeholder="Paste your API key (sk-dyaus-…)"
-          className="flex-1 rounded-md border border-gray-700 bg-gray-800 px-3 py-1.5 text-xs text-white placeholder-gray-500 focus:border-indigo-500 focus:outline-none font-mono"
+          className="flex-1 rounded-lg border border-sky-200 bg-white px-3 py-1.5 text-xs text-slate-900 placeholder-slate-400 focus:border-amber-400 focus:outline-none font-mono"
         />
         <button
           onClick={() => setShowKey((v) => !v)}
-          className="text-xs text-gray-500 hover:text-gray-300 shrink-0"
+          className="text-xs text-slate-400 hover:text-slate-700 shrink-0"
         >
           {showKey ? 'Hide' : 'Show'}
         </button>
@@ -146,44 +146,44 @@ export function ChatSection() {
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
         {messages.length === 0 && (
-          <p className="text-sm text-gray-600 text-center mt-8">
+          <p className="text-sm text-slate-400 text-center mt-8">
             Paste an API key above and send a message to test it
           </p>
         )}
         {messages.map((m, i) => (
           <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
             <div
-              className={`max-w-[80%] rounded-lg px-4 py-2 text-sm whitespace-pre-wrap ${
+              className={`max-w-[80%] rounded-xl px-4 py-2 text-sm whitespace-pre-wrap ${
                 m.role === 'user'
-                  ? 'bg-indigo-600 text-white'
-                  : 'bg-gray-800 text-gray-100'
+                  ? 'bg-amber-500 text-white'
+                  : 'bg-sky-50 border border-sky-100 text-slate-800'
               }`}
             >
               {m.content}
               {streaming && i === messages.length - 1 && m.role === 'assistant' && (
-                <span className="inline-block w-1.5 h-3.5 bg-gray-400 ml-0.5 animate-pulse align-middle" />
+                <span className="inline-block w-1.5 h-3.5 bg-sky-400 ml-0.5 animate-pulse align-middle" />
               )}
             </div>
           </div>
         ))}
-        {error && <p className="text-xs text-red-400 text-center">{error}</p>}
+        {error && <p className="text-xs text-red-500 text-center">{error}</p>}
         <div ref={bottomRef} />
       </div>
 
       {/* Input */}
-      <div className="px-4 py-3 border-t border-gray-800 flex gap-2">
+      <div className="px-4 py-3 border-t border-sky-100 flex gap-2">
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } }}
           placeholder="Type a message…"
           disabled={streaming}
-          className="flex-1 rounded-md border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-white placeholder-gray-500 focus:border-indigo-500 focus:outline-none disabled:opacity-50"
+          className="flex-1 rounded-lg border border-sky-200 bg-white px-3 py-2 text-sm text-slate-900 placeholder-slate-400 focus:border-amber-400 focus:outline-none disabled:opacity-50"
         />
         <button
           onClick={send}
           disabled={streaming || !input.trim()}
-          className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed"
+          className="rounded-lg bg-amber-500 px-4 py-2 text-sm font-medium text-white hover:bg-amber-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
         >
           {streaming ? '…' : 'Send'}
         </button>

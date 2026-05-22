@@ -55,3 +55,7 @@ export function adminPatch(path: string, secret: string, body?: unknown) {
     body: body ? JSON.stringify(body) : undefined,
   });
 }
+
+export function adminDelete(path: string, secret: string) {
+  return apiFetch(path, { method: 'DELETE', headers: { 'x-admin-secret': secret } });
+}

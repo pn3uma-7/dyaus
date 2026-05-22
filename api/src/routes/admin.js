@@ -1,6 +1,6 @@
 const crypto = require('crypto');
 const express = require('express');
-const { listUsers, createUser, adjustCredits, getStats, createKey, deactivateKey } = require('../services/postgres');
+const { listUsers, createUser, adjustCredits, getStats, createKey, deactivateKey, disableUser, enableUser, hardDeleteUser } = require('../services/postgres');
 const config = require('../config');
 
 const router = express.Router();
@@ -68,8 +68,25 @@ router.post('/users/:id/keys', async (req, res) => {
 
 // DELETE /admin/keys/:id — deactivate any key
 router.delete('/keys/:id', async (req, res) => {
-  // Admin can deactivate any key — pass null userId to skip ownership check
   await deactivateKey(req.params.id, req.query.user_id).catch(() => {});
+  res.json({ ok: true });
+});
+
+// PATCH /admin/users/:id/disable — soft disable (deactivates all keys, blocks magic links)
+router.patch('/users/:id/disable', async (req, res) => {
+  await disableUser(req.params.id).catch(() => {});
+  res.json({ ok: true });
+});
+
+// PATCH /admin/users/:id/enable — re-enable a disabled user
+router.patch('/users/:id/enable', async (req, res) => {
+  await enableUser(req.params.id).catch(() => {});
+  res.json({ ok: true });
+});
+
+// DELETE /admin/users/:id — hard delete (removes user + keys + usage log)
+router.delete('/users/:id', async (req, res) => {
+  await hardDeleteUser(req.params.id).catch(() => {});
   res.json({ ok: true });
 });
 

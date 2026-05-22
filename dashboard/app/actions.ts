@@ -2,7 +2,7 @@
 
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
-import { authPost, dashPost, dashDelete, adminGet, adminPost, adminPatch } from './lib/api';
+import { authPost, dashPost, dashDelete, adminGet, adminPost, adminPatch, adminDelete } from './lib/api';
 import { setSessionJwt, clearSession, setAdminSecret, clearAdminSession, getSessionJwt, getAdminSecret } from './lib/session';
 
 // ── Magic link auth ───────────────────────────────────────────────────────────
@@ -117,6 +117,27 @@ export async function createUserAction(_prev: unknown, formData: FormData) {
   } catch {
     return { error: 'Email already exists' };
   }
+}
+
+export async function disableUserAction(userId: string) {
+  const secret = await getAdminSecret();
+  if (!secret) redirect('/admin');
+  await adminPatch(`/admin/users/${userId}/disable`, secret);
+  revalidatePath('/admin');
+}
+
+export async function enableUserAction(userId: string) {
+  const secret = await getAdminSecret();
+  if (!secret) redirect('/admin');
+  await adminPatch(`/admin/users/${userId}/enable`, secret);
+  revalidatePath('/admin');
+}
+
+export async function hardDeleteUserAction(userId: string) {
+  const secret = await getAdminSecret();
+  if (!secret) redirect('/admin');
+  await adminDelete(`/admin/users/${userId}`, secret);
+  revalidatePath('/admin');
 }
 
 export async function adminCreateKeyAction(_prev: unknown, formData: FormData) {

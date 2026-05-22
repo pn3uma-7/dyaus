@@ -19,7 +19,7 @@ router.post('/magic-link', async (req, res) => {
     user = await createUser({ email, initialCredits: config.freeCreditsOnSignup }).catch(() => null);
   }
 
-  if (user) {
+  if (user && user.is_active !== false) {
     try {
       const token = await createMagicToken(user.id);
       const magicUrl = `${config.dashboardUrl}/auth/verify?token=${token}`;

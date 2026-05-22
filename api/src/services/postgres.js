@@ -110,7 +110,7 @@ async function getUsageByUser(userId, limit = 50, offset = 0) {
 
 async function listUsers() {
   const result = await pool.query(
-    `SELECT u.id, u.email, u.name, u.credit_balance, u.created_at,
+    `SELECT u.id, u.email, u.name, u.credit_balance, u.is_active, u.created_at,
             COUNT(k.id) FILTER (WHERE k.is_active) AS active_keys
      FROM users u
      LEFT JOIN api_keys k ON k.user_id = u.id
@@ -127,6 +127,21 @@ async function createUser({ email, name, initialCredits = 0 }) {
     [email, name || null, initialCredits]
   );
   return result.rows[0];
+}
+
+async function disableUser(userId) {
+  await pool.query(`UPDATE users SET is_active = FALSE WHERE id = $1`, [userId]);
+  await pool.query(`UPDATE api_keys SET is_active = FALSE WHERE user_id = $1`, [userId]);
+}
+
+async function enableUser(userId) {
+  await pool.query(`UPDATE users SET is_active = TRUE WHERE id = $1`, [userId]);
+}
+
+async function hardDeleteUser(userId) {
+  await pool.query(`DELETE FROM usage_log WHERE user_id = $1`, [userId]);
+  await pool.query(`DELETE FROM api_keys WHERE user_id = $1`, [userId]);
+  await pool.query(`DELETE FROM users WHERE id = $1`, [userId]);
 }
 
 async function adjustCredits(userId, amount) {
@@ -157,4 +172,5 @@ module.exports = {
   getKeyByHash, deductCredits, updateLastUsed, logUsage,
   getUserById, getUserByEmail, getKeysByUserId, createKey, deactivateKey, getUsageByUser,
   listUsers, createUser, adjustCredits, getStats,
+  disableUser, enableUser, hardDeleteUser,
 };

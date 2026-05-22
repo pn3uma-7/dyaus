@@ -1,7 +1,7 @@
 'use client';
 
 import { useActionState, useState } from 'react';
-import { adjustCreditsAction, createUserAction, adminCreateKeyAction, adminLogoutAction } from '../actions';
+import { adjustCreditsAction, createUserAction, adminCreateKeyAction, adminLogoutAction, disableUserAction, enableUserAction, hardDeleteUserAction } from '../actions';
 
 type Stats = {
   total_users: number;
@@ -16,6 +16,7 @@ type User = {
   email: string;
   name: string | null;
   credit_balance: number;
+  is_active: boolean;
   active_keys: number;
   created_at: string;
 };
@@ -38,7 +39,12 @@ function UserRow({ user }: { user: User }) {
     <div className="rounded-md bg-gray-800 p-4 space-y-3">
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div>
-          <p className="font-medium text-sm">{user.email}</p>
+          <div className="flex items-center gap-2">
+            <p className="font-medium text-sm">{user.email}</p>
+            {!user.is_active && (
+              <span className="text-xs bg-yellow-900 text-yellow-400 px-1.5 py-0.5 rounded">disabled</span>
+            )}
+          </div>
           {user.name && <p className="text-xs text-gray-400">{user.name}</p>}
           <p className="text-xs text-gray-500 mt-0.5">
             {user.active_keys} active {user.active_keys === 1 ? 'key' : 'keys'} ·
@@ -70,6 +76,37 @@ function UserRow({ user }: { user: User }) {
         {creditState?.error && <span className="text-xs text-red-400">{creditState.error}</span>}
         {creditState?.ok && <span className="text-xs text-green-400">Updated</span>}
       </form>
+
+      {/* Danger zone */}
+      <div className="flex flex-wrap gap-3 pt-1">
+        {user.is_active ? (
+          <button
+            onClick={() => {
+              if (confirm(`Disable ${user.email}? All their keys will be deactivated.`))
+                disableUserAction(user.id);
+            }}
+            className="text-xs text-yellow-500 hover:text-yellow-400 underline"
+          >
+            Disable user
+          </button>
+        ) : (
+          <button
+            onClick={() => enableUserAction(user.id)}
+            className="text-xs text-green-500 hover:text-green-400 underline"
+          >
+            Re-enable user
+          </button>
+        )}
+        <button
+          onClick={() => {
+            if (confirm(`Permanently delete ${user.email}? This removes all their keys and usage history and cannot be undone.`))
+              hardDeleteUserAction(user.id);
+          }}
+          className="text-xs text-red-500 hover:text-red-400 underline"
+        >
+          Delete user
+        </button>
+      </div>
 
       {/* Issue key */}
       <div>

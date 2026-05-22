@@ -120,11 +120,11 @@ async function listUsers() {
   return result.rows;
 }
 
-async function createUser({ email, name }) {
+async function createUser({ email, name, initialCredits = 0 }) {
   const result = await pool.query(
-    `INSERT INTO users (email, name) VALUES ($1, $2)
+    `INSERT INTO users (email, name, credit_balance) VALUES ($1, $2, $3)
      RETURNING id, email, name, credit_balance, created_at`,
-    [email, name || null]
+    [email, name || null, initialCredits]
   );
   return result.rows[0];
 }

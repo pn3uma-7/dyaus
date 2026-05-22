@@ -39,6 +39,7 @@ module.exports = {
   },
 
   dashboardUrl: process.env.DASHBOARD_URL || 'http://localhost:3000',
+  freeCreditsOnSignup: parseInt(process.env.FREE_CREDITS_ON_SIGNUP) || 10000,
 
   outputTokenMultiplier: parseInt(process.env.OUTPUT_TOKEN_MULTIPLIER) || 2,
   apiKeyPrefix: process.env.API_KEY_PREFIX || 'sk-dyaus-',

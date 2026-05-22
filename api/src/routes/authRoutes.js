@@ -1,5 +1,5 @@
 const express = require('express');
-const { getUserByEmail, getUserById } = require('../services/postgres');
+const { getUserByEmail, getUserById, createUser } = require('../services/postgres');
 const { createMagicToken, consumeMagicToken, sendMagicLinkEmail, issueJwt } = require('../services/authService');
 const config = require('../config');
 
@@ -12,7 +12,12 @@ router.post('/magic-link', async (req, res) => {
   const email = (req.body.email || '').trim().toLowerCase();
   if (!email) return res.status(400).json({ error: 'email required' });
 
-  const user = await getUserByEmail(email).catch(() => null);
+  let user = await getUserByEmail(email).catch(() => null);
+
+  if (!user) {
+    // First time — auto-register with free credits
+    user = await createUser({ email, initialCredits: config.freeCreditsOnSignup }).catch(() => null);
+  }
 
   if (user) {
     try {
@@ -24,7 +29,7 @@ router.post('/magic-link', async (req, res) => {
     }
   }
 
-  // Always return 200 — don't leak whether email exists
+  // Always return 200 — don't leak registration status
   res.json({ ok: true });
 });
 

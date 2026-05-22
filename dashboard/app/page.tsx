@@ -10,7 +10,7 @@ export default function LoginPage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-sky-50 via-white to-amber-50">
         <div className="w-full max-w-sm space-y-5 px-6 text-center">
-          <img src="/dyaus.png" alt="Dyaus" className="h-16 w-16 object-contain mx-auto" />
+          <img src="/dyaus.png" alt="Dyaus" className="h-24 w-24 object-contain mx-auto" />
           <div>
             <h2 className="text-xl font-semibold text-slate-900">Check your email</h2>
             <p className="mt-1 text-sm text-slate-500">
@@ -32,7 +32,7 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-sky-50 via-white to-amber-50">
       <div className="w-full max-w-sm px-6">
         <div className="text-center mb-8">
-          <img src="/dyaus.png" alt="Dyaus" className="h-20 w-20 object-contain mx-auto mb-4" />
+          <img src="/dyaus.png" alt="Dyaus" className="h-28 w-28 object-contain mx-auto mb-4" />
           <h1 className="text-3xl font-bold text-slate-900">Dyaus</h1>
           <p className="mt-1 text-sm text-slate-500">Sky Father · AI Inference</p>
         </div>

@@ -22,7 +22,7 @@ export default async function DashboardPage() {
     <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-amber-50">
       <header className="bg-white border-b border-sky-100 px-6 py-4 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-3">
-          <img src="/dyaus.png" alt="Dyaus" className="h-9 w-9 object-contain" />
+          <img src="/dyaus.png" alt="Dyaus" className="h-12 w-12 object-contain" />
           <h1 className="font-bold text-lg text-slate-900">Dyaus</h1>
         </div>
         <div className="flex items-center gap-4">

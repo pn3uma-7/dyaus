@@ -7,7 +7,7 @@ export function AdminLogin({ error }: { error?: string }) {
   const [state, action, pending] = useActionState(adminLoginAction, null);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-sky-100 via-sky-50 to-amber-100">
+    <div className="h-screen flex items-center justify-center bg-gradient-to-br from-sky-100 via-sky-50 to-amber-100">
       <div className="w-full max-w-sm px-6">
         <div className="text-center mb-8">
           <div className="w-44 h-44 rounded-full overflow-hidden border-2 border-amber-300 shadow-lg mx-auto mb-5">

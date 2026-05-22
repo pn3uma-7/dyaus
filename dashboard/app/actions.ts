@@ -19,6 +19,22 @@ export async function requestMagicLinkAction(_prev: unknown, formData: FormData)
   }
 }
 
+export async function verifyTokenAction(_prev: unknown, formData: FormData) {
+  const token = formData.get('token') as string;
+  if (!token) return { error: 'Invalid link' };
+
+  let jwt: string;
+  try {
+    const result = await authPost('/auth/verify', { token });
+    jwt = result.jwt;
+  } catch {
+    return { error: 'This link has expired or already been used. Request a new one.' };
+  }
+
+  await setSessionJwt(jwt);
+  redirect('/dashboard');
+}
+
 export async function logoutAction() {
   await clearSession();
   redirect('/');

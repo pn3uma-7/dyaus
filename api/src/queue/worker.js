@@ -5,27 +5,161 @@ const { getChannel, close: closeQueue, QUEUE_NAME } = require('../services/queue
 const { publish, redisClient } = require('../services/redis');
 const { deductCredits, updateLastUsed, logUsage } = require('../services/postgres');
 const { chatCompletion, chatStream } = require('../services/inference');
+const { webSearch } = require('../services/webSearch');
 const { extractUsage } = require('../services/tokenCounter');
 const { calculateCredits } = require('../services/credits');
 const config = require('../config');
+
+const WEB_SEARCH_TOOL = {
+  type: 'function',
+  function: {
+    name: 'web_search',
+    description:
+      'Search the web for current information. Use this when the user asks about recent events, real-time data, or anything that may have changed after your training cutoff.',
+    parameters: {
+      type: 'object',
+      properties: {
+        query: { type: 'string', description: 'The search query' },
+      },
+      required: ['query'],
+    },
+  },
+};
+
+// ── Entry point ───────────────────────────────────────────────────────────────
 
 async function handleJob({ jobId, body, keyRecord }) {
   const redisChannel = `job:${jobId}`;
   const start = Date.now();
   const model = body.model || config.inference.defaultModel;
   const isStream = !!body.stream;
+  const canSearch = keyRecord.web_search ?? false;
 
   try {
-    if (isStream) {
-      await handleStream(body, redisChannel, start, model, keyRecord);
+    if (canSearch) {
+      if (isStream) {
+        await handleWithToolsStream(body, redisChannel, start, model, keyRecord);
+      } else {
+        await handleWithToolsNonStream(body, redisChannel, start, model, keyRecord);
+      }
     } else {
-      await handleNonStream(body, redisChannel, start, model, keyRecord);
+      if (isStream) {
+        await handleStream(body, redisChannel, start, model, keyRecord);
+      } else {
+        await handleNonStream(body, redisChannel, start, model, keyRecord);
+      }
     }
   } catch (err) {
     console.error(`Job ${jobId} error:`, err.message);
     await publish(redisChannel, { type: 'error', message: 'Inference failed' }).catch(() => {});
   }
 }
+
+// ── Agentic paths (with tool use) ─────────────────────────────────────────────
+
+async function handleWithToolsNonStream(body, redisChannel, start, model, keyRecord) {
+  const firstBody = { ...body, tools: [WEB_SEARCH_TOOL], tool_choice: 'auto', stream: false };
+  const firstResult = await chatCompletion(firstBody);
+
+  const choice = firstResult.choices?.[0];
+  const toolCalls = choice?.message?.tool_calls;
+
+  if (!toolCalls?.length) {
+    // No tool use — return as-is
+    const durationMs = Date.now() - start;
+    const { inputTokens, outputTokens } = extractUsage(firstResult);
+    const creditsDeducted = calculateCredits(inputTokens, outputTokens);
+    await publish(redisChannel, { type: 'result', data: firstResult });
+    doAccounting(keyRecord, model, inputTokens, outputTokens, creditsDeducted, durationMs);
+    return;
+  }
+
+  // Execute all tool calls (there will typically be one)
+  const toolMessages = await executeToolCalls(toolCalls, redisChannel);
+
+  // Second pass with tool results injected
+  const secondBody = {
+    ...body,
+    stream: false,
+    messages: [
+      ...body.messages,
+      { role: 'assistant', content: null, tool_calls: toolCalls },
+      ...toolMessages,
+    ],
+  };
+  const secondResult = await chatCompletion(secondBody);
+
+  const durationMs = Date.now() - start;
+  const usage1 = extractUsage(firstResult);
+  const usage2 = extractUsage(secondResult);
+  const inputTokens = usage1.inputTokens + usage2.inputTokens;
+  const outputTokens = usage1.outputTokens + usage2.outputTokens;
+  const creditsDeducted = calculateCredits(inputTokens, outputTokens);
+
+  await publish(redisChannel, { type: 'result', data: secondResult });
+  doAccounting(keyRecord, model, inputTokens, outputTokens, creditsDeducted, durationMs);
+}
+
+async function handleWithToolsStream(body, redisChannel, start, model, keyRecord) {
+  // First pass: non-streaming to detect tool calls cheaply
+  const firstBody = { ...body, tools: [WEB_SEARCH_TOOL], tool_choice: 'auto', stream: false };
+  const firstResult = await chatCompletion(firstBody);
+
+  const choice = firstResult.choices?.[0];
+  const toolCalls = choice?.message?.tool_calls;
+
+  if (!toolCalls?.length) {
+    // No tool use — re-run as a proper streaming response so the client gets SSE chunks
+    const usage1 = extractUsage(firstResult);
+    await handleStream(body, redisChannel, start, model, keyRecord, usage1);
+    return;
+  }
+
+  const toolMessages = await executeToolCalls(toolCalls, redisChannel);
+
+  const secondBody = {
+    ...body,
+    stream: true,
+    messages: [
+      ...body.messages,
+      { role: 'assistant', content: null, tool_calls: toolCalls },
+      ...toolMessages,
+    ],
+  };
+
+  const usage1 = extractUsage(firstResult);
+  await handleStream(secondBody, redisChannel, start, model, keyRecord, usage1);
+}
+
+// ── Tool execution ────────────────────────────────────────────────────────────
+
+async function executeToolCalls(toolCalls, redisChannel) {
+  const messages = [];
+  for (const call of toolCalls) {
+    if (call.function?.name !== 'web_search') continue;
+
+    let query = '';
+    try {
+      query = JSON.parse(call.function.arguments).query;
+    } catch {
+      query = call.function.arguments;
+    }
+
+    console.log(`Worker: web_search query="${query}"`);
+    await publish(redisChannel, { type: 'searching', query }).catch(() => {});
+
+    const searchResult = await webSearch(query);
+
+    messages.push({
+      role: 'tool',
+      tool_call_id: call.id,
+      content: searchResult,
+    });
+  }
+  return messages;
+}
+
+// ── Plain paths (no tools) ────────────────────────────────────────────────────
 
 async function handleNonStream(body, redisChannel, start, model, keyRecord) {
   const result = await chatCompletion(body);
@@ -38,7 +172,8 @@ async function handleNonStream(body, redisChannel, start, model, keyRecord) {
   doAccounting(keyRecord, model, inputTokens, outputTokens, creditsDeducted, durationMs);
 }
 
-async function handleStream(body, redisChannel, start, model, keyRecord) {
+// extraUsage: tokens from a prior non-stream pass to add to the tally
+async function handleStream(body, redisChannel, start, model, keyRecord, extraUsage = null) {
   const response = await chatStream(body);
   const nodeStream = Readable.fromWeb(response.body);
 
@@ -48,27 +183,24 @@ async function handleStream(body, redisChannel, start, model, keyRecord) {
   for await (const rawChunk of nodeStream) {
     buffer += rawChunk.toString('utf8');
     const lines = buffer.split('\n');
-    buffer = lines.pop(); // hold the last (possibly incomplete) line
+    buffer = lines.pop();
 
     for (const line of lines) {
       const trimmed = line.trim();
       if (!trimmed || !trimmed.startsWith('data: ')) continue;
 
       const data = trimmed.slice(6);
-      if (data === '[DONE]') continue; // API sends its own [DONE]
+      if (data === '[DONE]') continue;
 
-      // Publish raw SSE line to the API process
       await publish(redisChannel, { type: 'chunk', line: trimmed });
 
-      // Capture usage when present (comes in the final content chunk)
       try {
         const parsed = JSON.parse(data);
         if (parsed.usage) usage = parsed.usage;
-      } catch {} // non-JSON, skip
+      } catch {}
     }
   }
 
-  // Flush any remaining buffer content
   if (buffer.trim().startsWith('data: ')) {
     const data = buffer.trim().slice(6);
     if (data !== '[DONE]') {
@@ -81,14 +213,18 @@ async function handleStream(body, redisChannel, start, model, keyRecord) {
   }
 
   const durationMs = Date.now() - start;
-  const inputTokens = usage?.prompt_tokens ?? 0;
-  const outputTokens = usage?.completion_tokens ?? 0;
+  const streamInputTokens = usage?.prompt_tokens ?? 0;
+  const streamOutputTokens = usage?.completion_tokens ?? 0;
+  const inputTokens = streamInputTokens + (extraUsage?.inputTokens ?? 0);
+  const outputTokens = streamOutputTokens + (extraUsage?.outputTokens ?? 0);
   const creditsDeducted = calculateCredits(inputTokens, outputTokens);
 
   await publish(redisChannel, { type: 'done' });
 
   doAccounting(keyRecord, model, inputTokens, outputTokens, creditsDeducted, durationMs);
 }
+
+// ── Accounting ────────────────────────────────────────────────────────────────
 
 function doAccounting(keyRecord, model, inputTokens, outputTokens, creditsDeducted, durationMs) {
   deductCredits(keyRecord.user_id, creditsDeducted)
@@ -99,11 +235,12 @@ function doAccounting(keyRecord, model, inputTokens, outputTokens, creditsDeduct
     .catch((err) => console.error('Worker: logUsage failed:', err.message));
 }
 
+// ── Queue consumer ────────────────────────────────────────────────────────────
+
 async function start() {
   console.log('Dyaus worker starting...');
   const ch = await getChannel();
 
-  // Process one job at a time — llama-server manages its own parallel slots
   ch.prefetch(1);
 
   ch.consume(QUEUE_NAME, async (msg) => {

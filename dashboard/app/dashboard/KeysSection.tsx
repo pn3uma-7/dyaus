@@ -8,6 +8,7 @@ type Key = {
   key_prefix: string;
   label: string | null;
   rate_limit_rpm: number;
+  web_search: boolean;
   is_active: boolean;
   created_at: string;
   last_used_at: string | null;
@@ -67,6 +68,11 @@ export function KeysSection({ keys }: { keys: Key[] }) {
                 {k.is_active
                   ? <span className="text-green-600 font-medium">active</span>
                   : <span className="text-slate-400">revoked</span>}
+                {k.web_search && (
+                  <span className="ml-1.5 inline-flex items-center gap-0.5 bg-sky-100 text-sky-700 text-xs px-1.5 py-0.5 rounded font-medium">
+                    🌐 web
+                  </span>
+                )}
                 {k.last_used_at && ` · last used ${new Date(k.last_used_at).toLocaleDateString()}`}
               </div>
             </div>

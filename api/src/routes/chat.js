@@ -58,6 +58,8 @@ router.post('/completions', auth, rateLimit, async (req, res) => {
       const msg = JSON.parse(rawMsg);
       if (msg.type === 'chunk') {
         res.write(`${msg.line}\n\n`);
+      } else if (msg.type === 'searching') {
+        res.write(`data: {"dyaus_status":"searching"}\n\n`);
       } else if (msg.type === 'done') {
         cleanup();
         res.write('data: [DONE]\n\n');

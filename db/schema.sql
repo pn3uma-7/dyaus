@@ -14,6 +14,7 @@ CREATE TABLE api_keys (
   label TEXT,
   model_access TEXT[] DEFAULT '{"qwen3-30b"}',
   rate_limit_rpm INTEGER DEFAULT 10,
+  web_search BOOLEAN DEFAULT FALSE,
   is_active BOOLEAN DEFAULT TRUE,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   last_used_at TIMESTAMPTZ

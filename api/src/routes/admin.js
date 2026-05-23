@@ -71,7 +71,7 @@ router.patch('/users/:id/credits', async (req, res) => {
 
 // POST /admin/users/:id/keys — create a key for a user
 router.post('/users/:id/keys', async (req, res) => {
-  const { label, rate_limit_rpm, model_access } = req.body;
+  const { label, rate_limit_rpm, model_access, web_search } = req.body;
   const rawKey = config.apiKeyPrefix + crypto.randomBytes(20).toString('hex');
   const keyPrefix = rawKey.slice(0, 12);
   const keyHash = crypto.createHash('sha256').update(rawKey).digest('hex');
@@ -83,6 +83,7 @@ router.post('/users/:id/keys', async (req, res) => {
     label,
     rateLimitRpm: rate_limit_rpm,
     modelAccess: model_access,
+    webSearch: web_search === true || web_search === 'true',
   }).catch(() => null);
 
   if (!key) return res.status(500).json({ error: 'Failed to create key' });

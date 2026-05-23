@@ -44,6 +44,28 @@ function StatCard({ label, value }: { label: string; value: number }) {
   );
 }
 
+function WebSearchToggle() {
+  const [enabled, setEnabled] = useState(false);
+  return (
+    <label className="flex items-center gap-1.5 cursor-pointer select-none">
+      <input type="hidden" name="web_search" value={enabled ? 'true' : 'false'} />
+      <div
+        onClick={() => setEnabled((v) => !v)}
+        className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors ${
+          enabled ? 'bg-amber-500' : 'bg-slate-300'
+        }`}
+      >
+        <span
+          className={`inline-block h-3.5 w-3.5 rounded-full bg-white shadow transition-transform ${
+            enabled ? 'translate-x-4.5' : 'translate-x-0.5'
+          }`}
+        />
+      </div>
+      <span className="text-xs text-slate-500">Web search</span>
+    </label>
+  );
+}
+
 function UserRow({ user }: { user: User }) {
   const [showKeyForm, setShowKeyForm] = useState(false);
   const [creditState, creditAction, creditPending] = useActionState(adjustCreditsAction, null);
@@ -140,7 +162,7 @@ function UserRow({ user }: { user: User }) {
               </div>
             )}
             {keyState?.error && <p className="text-xs text-red-500">{keyState.error}</p>}
-            <form action={keyAction} className="flex flex-wrap gap-2">
+            <form action={keyAction} className="flex flex-wrap gap-2 items-center">
               <input type="hidden" name="userId" value={user.id} />
               <input
                 name="label"
@@ -155,6 +177,7 @@ function UserRow({ user }: { user: User }) {
                 placeholder="RPM"
                 className="w-16 rounded-lg border border-sky-300 bg-white px-2 py-1 text-xs text-slate-900 focus:outline-none focus:border-amber-400"
               />
+              <WebSearchToggle />
               <button
                 type="submit"
                 disabled={keyPending}

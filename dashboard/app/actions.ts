@@ -177,9 +177,10 @@ export async function adminCreateKeyAction(_prev: unknown, formData: FormData) {
   const userId = formData.get('userId') as string;
   const label = (formData.get('label') as string)?.trim() || undefined;
   const rpm = parseInt(formData.get('rate_limit_rpm') as string) || 10;
+  const webSearch = formData.get('web_search') === 'true';
 
   try {
-    const result = await adminPost(`/admin/users/${userId}/keys`, secret, { label, rate_limit_rpm: rpm });
+    const result = await adminPost(`/admin/users/${userId}/keys`, secret, { label, rate_limit_rpm: rpm, web_search: webSearch });
     return { rawKey: result.raw_key as string };
   } catch {
     return { error: 'Failed to create key' };

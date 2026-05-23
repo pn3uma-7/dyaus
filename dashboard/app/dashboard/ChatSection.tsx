@@ -10,6 +10,7 @@ export function ChatSection() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [streaming, setStreaming] = useState(false);
+  const [searching, setSearching] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -31,6 +32,7 @@ export function ChatSection() {
     setInput('');
     setError(null);
     setStreaming(true);
+    setSearching(false);
 
     const assistantMsg: Message = { role: 'assistant', content: '' };
     setMessages([...next, assistantMsg]);
@@ -86,6 +88,11 @@ export function ChatSection() {
           if (data === '[DONE]') continue;
           try {
             const parsed = JSON.parse(data);
+            if (parsed.dyaus_status === 'searching') {
+              setSearching(true);
+              continue;
+            }
+            if (parsed.choices) setSearching(false);
             const delta = parsed.choices?.[0]?.delta?.content;
             if (delta) {
               setMessages((prev) => {
@@ -107,6 +114,7 @@ export function ChatSection() {
     }
 
     setStreaming(false);
+    setSearching(false);
   }
 
   return (
@@ -166,6 +174,14 @@ export function ChatSection() {
             </div>
           </div>
         ))}
+        {searching && (
+          <div className="flex justify-start">
+            <div className="flex items-center gap-1.5 rounded-xl bg-sky-100 border border-sky-200 px-3 py-2 text-xs text-sky-700">
+              <span className="inline-block w-2 h-2 rounded-full bg-sky-400 animate-ping" />
+              Searching the web…
+            </div>
+          </div>
+        )}
         {error && <p className="text-xs text-red-500 text-center">{error}</p>}
         <div ref={bottomRef} />
       </div>

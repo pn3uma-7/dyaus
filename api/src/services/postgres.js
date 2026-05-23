@@ -10,7 +10,7 @@ const pool = new Pool(config.pg);
 
 async function getKeyByHash(keyHash) {
   const result = await pool.query(
-    `SELECT k.id, k.user_id, k.is_active, k.rate_limit_rpm, u.credit_balance
+    `SELECT k.id, k.user_id, k.is_active, k.rate_limit_rpm, k.web_search, u.credit_balance
      FROM api_keys k
      JOIN users u ON u.id = k.user_id
      WHERE k.key_hash = $1`,
@@ -63,7 +63,7 @@ async function getUserByEmail(email) {
 
 async function getKeysByUserId(userId) {
   const result = await pool.query(
-    `SELECT id, key_prefix, label, model_access, rate_limit_rpm, is_active, created_at, last_used_at
+    `SELECT id, key_prefix, label, model_access, rate_limit_rpm, web_search, is_active, created_at, last_used_at
      FROM api_keys
      WHERE user_id = $1
      ORDER BY created_at DESC`,
@@ -72,12 +72,12 @@ async function getKeysByUserId(userId) {
   return result.rows;
 }
 
-async function createKey({ userId, keyHash, keyPrefix, label, rateLimitRpm, modelAccess }) {
+async function createKey({ userId, keyHash, keyPrefix, label, rateLimitRpm, modelAccess, webSearch }) {
   const result = await pool.query(
-    `INSERT INTO api_keys (user_id, key_hash, key_prefix, label, rate_limit_rpm, model_access)
-     VALUES ($1, $2, $3, $4, $5, $6)
-     RETURNING id, key_prefix, label, model_access, rate_limit_rpm, is_active, created_at`,
-    [userId, keyHash, keyPrefix, label || null, rateLimitRpm || 10, modelAccess || ['qwen3-30b']]
+    `INSERT INTO api_keys (user_id, key_hash, key_prefix, label, rate_limit_rpm, model_access, web_search)
+     VALUES ($1, $2, $3, $4, $5, $6, $7)
+     RETURNING id, key_prefix, label, model_access, rate_limit_rpm, web_search, is_active, created_at`,
+    [userId, keyHash, keyPrefix, label || null, rateLimitRpm || 10, modelAccess || ['qwen3-30b'], webSearch ?? false]
   );
   return result.rows[0];
 }

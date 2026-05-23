@@ -62,6 +62,42 @@ const WEB_SEARCH_SYSTEM =
   'recent news, real-time data, today\'s date, prices, weather, or anything that may have ' +
   'changed since your training. Always search before saying you don\'t know something current.';
 
+// llama-server sometimes passes the model's native tool call text through as content
+// instead of converting it to the OpenAI tool_calls JSON field. Parse both formats.
+function parseContentForToolCalls(content) {
+  if (!content) return [];
+  const calls = [];
+
+  // JSON inside <tool_call> tags — Qwen/Hermes: <tool_call>{"name":"web_search","arguments":{...}}</tool_call>
+  const jsonRe = /<tool_call>\s*([\s\S]*?)\s*<\/tool_call>/g;
+  let m;
+  while ((m = jsonRe.exec(content)) !== null) {
+    try {
+      const obj = JSON.parse(m[1].trim());
+      if (obj.name === 'web_search') {
+        calls.push({
+          id: `tc_${Date.now()}_${calls.length}`,
+          type: 'function',
+          function: { name: 'web_search', arguments: JSON.stringify(obj.arguments ?? obj.parameters ?? {}) },
+        });
+      }
+    } catch {}
+  }
+  if (calls.length) return calls;
+
+  // Attribute XML format: <function=web_search><parameter=query>QUERY</parameter></function>
+  const fnMatch = content.match(/<function=web_search>[\s\S]*?<parameter=query>([\s\S]*?)<\/parameter>/);
+  if (fnMatch) {
+    calls.push({
+      id: `tc_${Date.now()}`,
+      type: 'function',
+      function: { name: 'web_search', arguments: JSON.stringify({ query: fnMatch[1].trim() }) },
+    });
+  }
+
+  return calls;
+}
+
 function injectSearchSystem(messages) {
   if (messages[0]?.role === 'system') {
     // Append to existing system message rather than adding a second one
@@ -81,7 +117,10 @@ async function handleWithToolsNonStream(body, redisChannel, start, model, keyRec
   const firstResult = await chatCompletion(firstBody);
 
   const choice = firstResult.choices?.[0];
-  const toolCalls = choice?.message?.tool_calls;
+  const toolCalls =
+    choice?.message?.tool_calls?.length
+      ? choice.message.tool_calls
+      : parseContentForToolCalls(choice?.message?.content);
 
   if (!toolCalls?.length) {
     // No tool use — return as-is
@@ -126,7 +165,10 @@ async function handleWithToolsStream(body, redisChannel, start, model, keyRecord
   const firstResult = await chatCompletion(firstBody);
 
   const choice = firstResult.choices?.[0];
-  const toolCalls = choice?.message?.tool_calls;
+  const toolCalls =
+    choice?.message?.tool_calls?.length
+      ? choice.message.tool_calls
+      : parseContentForToolCalls(choice?.message?.content);
 
   if (!toolCalls?.length) {
     // No tool use — re-run as a proper streaming response so the client gets SSE chunks

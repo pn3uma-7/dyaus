@@ -1,7 +1,7 @@
 'use client';
 
-import { useActionState, useState } from 'react';
-import { adjustCreditsAction, createUserAction, adminCreateKeyAction, adminLogoutAction, disableUserAction, enableUserAction, hardDeleteUserAction } from '../actions';
+import { useActionState, useState, useTransition } from 'react';
+import { adjustCreditsAction, createUserAction, adminCreateKeyAction, adminLogoutAction, disableUserAction, enableUserAction, hardDeleteUserAction, setSettingAction } from '../actions';
 
 type Stats = {
   total_users: number;
@@ -10,6 +10,20 @@ type Stats = {
   total_credits_used: number;
   requests_today: number;
 };
+
+type BillingDay = {
+  date: string;
+  orders: number;
+  revenue_paise: number;
+  credits: number;
+};
+
+type Billing = {
+  total_orders: number;
+  total_revenue_paise: number;
+  total_credits_sold: number;
+  daily: BillingDay[];
+} | null;
 
 type User = {
   id: string;
@@ -156,7 +170,100 @@ function UserRow({ user }: { user: User }) {
   );
 }
 
-export function AdminPanel({ stats, users }: { stats: Stats; users: User[] }) {
+function ToggleSwitch({ enabled, onToggle, disabled }: { enabled: boolean; onToggle: () => void; disabled: boolean }) {
+  return (
+    <button
+      role="switch"
+      aria-checked={enabled}
+      onClick={onToggle}
+      disabled={disabled}
+      className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors disabled:opacity-60 ${
+        enabled ? 'bg-amber-500' : 'bg-slate-300'
+      }`}
+    >
+      <span
+        className={`inline-block h-4 w-4 rounded-full bg-white shadow transition-transform ${
+          enabled ? 'translate-x-6' : 'translate-x-1'
+        }`}
+      />
+    </button>
+  );
+}
+
+function BillingSection({ billing, paymentsEnabled }: { billing: Billing; paymentsEnabled: boolean }) {
+  const [enabled, setEnabled] = useState(paymentsEnabled);
+  const [pending, startTransition] = useTransition();
+
+  function handleToggle() {
+    const next = !enabled;
+    setEnabled(next);
+    startTransition(() => setSettingAction('payments_enabled', String(next)));
+  }
+
+  const revenueINR = billing ? (billing.total_revenue_paise / 100).toFixed(2) : '0.00';
+
+  return (
+    <section className="rounded-2xl border border-amber-200 bg-white/85 backdrop-blur-sm p-6 space-y-4 shadow-sm">
+      <div className="flex items-center justify-between">
+        <h2 className="font-semibold text-slate-900">Revenue</h2>
+        <div className="flex items-center gap-2.5">
+          <span className="text-xs text-slate-500">{enabled ? 'Payments on' : 'Payments off'}</span>
+          <ToggleSwitch enabled={enabled} onToggle={handleToggle} disabled={pending} />
+        </div>
+      </div>
+
+      {billing && (
+        <>
+          <div className="grid grid-cols-3 gap-3">
+            <div className="rounded-xl border border-sky-200 bg-sky-50/60 p-4">
+              <p className="text-xs text-slate-500">Total Revenue</p>
+              <p className="mt-1 text-2xl font-bold tabular-nums text-amber-600">₹{revenueINR}</p>
+            </div>
+            <div className="rounded-xl border border-sky-200 bg-sky-50/60 p-4">
+              <p className="text-xs text-slate-500">Total Orders</p>
+              <p className="mt-1 text-2xl font-bold tabular-nums text-slate-900">{billing.total_orders.toLocaleString()}</p>
+            </div>
+            <div className="rounded-xl border border-sky-200 bg-sky-50/60 p-4">
+              <p className="text-xs text-slate-500">Credits Sold</p>
+              <p className="mt-1 text-2xl font-bold tabular-nums text-slate-900">{Number(billing.total_credits_sold).toLocaleString()}</p>
+            </div>
+          </div>
+
+          {billing.daily.length > 0 ? (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left text-xs text-slate-400 border-b border-sky-200">
+                    <th className="pb-2 font-medium">Date</th>
+                    <th className="pb-2 font-medium text-right">Orders</th>
+                    <th className="pb-2 font-medium text-right">Revenue</th>
+                    <th className="pb-2 font-medium text-right">Credits</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-sky-100">
+                  {billing.daily.map((row) => (
+                    <tr key={row.date} className="text-slate-700">
+                      <td className="py-2 text-xs text-slate-500">{new Date(row.date).toLocaleDateString()}</td>
+                      <td className="py-2 text-right tabular-nums">{row.orders}</td>
+                      <td className="py-2 text-right tabular-nums font-semibold text-amber-600">
+                        ₹{(row.revenue_paise / 100).toFixed(2)}
+                      </td>
+                      <td className="py-2 text-right tabular-nums">{Number(row.credits).toLocaleString()}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <p className="text-sm text-slate-400">No payments yet.</p>
+          )}
+        </>
+      )}
+    </section>
+  );
+}
+
+export function AdminPanel({ stats, users, billing, paymentsEnabled }: { stats: Stats; users: User[]; billing: Billing; paymentsEnabled: boolean }) {
   const [newUserState, newUserAction, creatingUser] = useActionState(createUserAction, null);
 
   return (
@@ -180,6 +287,8 @@ export function AdminPanel({ stats, users }: { stats: Stats; users: User[] }) {
           <StatCard label="Credits Used" value={stats.total_credits_used} />
           <StatCard label="Requests Today" value={stats.requests_today} />
         </div>
+
+        <BillingSection billing={billing} paymentsEnabled={paymentsEnabled} />
 
         {/* Users */}
         <section className="rounded-2xl border border-sky-200 bg-sky-100/60 backdrop-blur-sm p-6 space-y-4 shadow-sm">

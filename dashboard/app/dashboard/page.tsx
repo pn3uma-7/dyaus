@@ -6,15 +6,17 @@ import { KeysSection } from './KeysSection';
 import { UsageSection } from './UsageSection';
 import { ChatSection } from './ChatSection';
 import { QuickStartSection } from './QuickStartSection';
+import { TopUpSection } from './TopUpSection';
 
 export default async function DashboardPage() {
   const jwt = await getSessionJwt();
   if (!jwt) redirect('/');
 
-  const [user, keys, usage] = await Promise.all([
+  const [user, keys, usage, settings] = await Promise.all([
     dashGet('/dashboard/me', jwt).catch(() => null),
     dashGet('/dashboard/me/keys', jwt).catch(() => []),
     dashGet('/dashboard/me/usage?limit=20', jwt).catch(() => []),
+    dashGet('/dashboard/settings', jwt).catch(() => ({ payments_enabled: false })),
   ]);
 
   if (!user) redirect('/');
@@ -47,6 +49,12 @@ export default async function DashboardPage() {
           </p>
         </section>
 
+        {settings?.payments_enabled && (
+          <TopUpSection
+            email={user.email}
+            razorpayKeyId={process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID ?? ''}
+          />
+        )}
         <KeysSection keys={keys} />
         <QuickStartSection apiUrl={process.env.API_URL ?? 'https://api.ameytambe.rocks'} />
         <ChatSection />

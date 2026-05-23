@@ -7,6 +7,7 @@ const chatRouter = require('./routes/chat');
 const healthRouter = require('./routes/health');
 const authRouter = require('./routes/authRoutes');
 const dashboardRouter = require('./routes/dashboard');
+const paymentsRouter = require('./routes/payments');
 const adminRouter = require('./routes/admin');
 
 const app = express();
@@ -15,6 +16,7 @@ app.use(express.json());
 app.use('/v1/chat', chatRouter);
 app.use('/auth', authRouter);
 app.use('/dashboard', dashboardRouter);
+app.use('/dashboard/payments', paymentsRouter);
 app.use('/admin', adminRouter);
 app.use('/', healthRouter);
 

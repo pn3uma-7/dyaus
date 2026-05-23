@@ -57,11 +57,41 @@ export async function createKeyAction(_prev: unknown, formData: FormData) {
   }
 }
 
+// ── Payments ──────────────────────────────────────────────────────────────────
+
+export async function createPaymentOrderAction(packId: string) {
+  const jwt = await getSessionJwt();
+  if (!jwt) redirect('/');
+  const result = await dashPost('/dashboard/payments/create-order', jwt, { packId });
+  return result as { orderId: string; amount: number; currency: string };
+}
+
+export async function verifyPaymentAction(data: {
+  razorpay_payment_id: string;
+  razorpay_order_id: string;
+  razorpay_signature: string;
+}) {
+  const jwt = await getSessionJwt();
+  if (!jwt) redirect('/');
+  const result = await dashPost('/dashboard/payments/verify', jwt, data);
+  revalidatePath('/dashboard');
+  return result as { ok: boolean; creditsAdded: number; packName: string };
+}
+
 export async function revokeKeyAction(keyId: string) {
   const jwt = await getSessionJwt();
   if (!jwt) redirect('/');
   await dashDelete(`/dashboard/me/keys/${keyId}`, jwt).catch(() => {});
   revalidatePath('/dashboard');
+}
+
+// ── Admin settings ────────────────────────────────────────────────────────────
+
+export async function setSettingAction(key: string, value: string) {
+  const secret = await getAdminSecret();
+  if (!secret) redirect('/admin');
+  await adminPatch(`/admin/settings/${key}`, secret, { value });
+  revalidatePath('/admin');
 }
 
 // ── Admin auth ────────────────────────────────────────────────────────────────

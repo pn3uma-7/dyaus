@@ -1,6 +1,6 @@
 const crypto = require('crypto');
 const express = require('express');
-const { listUsers, createUser, adjustCredits, getStats, createKey, deactivateKey, disableUser, enableUser, hardDeleteUser } = require('../services/postgres');
+const { listUsers, createUser, adjustCredits, getStats, getBillingStats, getAllSettings, setSetting, createKey, deactivateKey, disableUser, enableUser, hardDeleteUser } = require('../services/postgres');
 const config = require('../config');
 
 const router = express.Router();
@@ -20,6 +20,29 @@ router.get('/stats', async (req, res) => {
   const stats = await getStats().catch(() => null);
   if (!stats) return res.status(500).json({ error: 'Failed to load stats' });
   res.json(stats);
+});
+
+// GET /admin/settings
+router.get('/settings', async (req, res) => {
+  const settings = await getAllSettings().catch(() => null);
+  if (!settings) return res.status(500).json({ error: 'Failed to load settings' });
+  res.json(settings);
+});
+
+// PATCH /admin/settings/:key
+router.patch('/settings/:key', async (req, res) => {
+  const { key } = req.params;
+  const { value } = req.body;
+  if (value === undefined) return res.status(400).json({ error: 'value required' });
+  await setSetting(key, String(value)).catch(() => {});
+  res.json({ ok: true, key, value: String(value) });
+});
+
+// GET /admin/billing
+router.get('/billing', async (req, res) => {
+  const billing = await getBillingStats().catch(() => null);
+  if (!billing) return res.status(500).json({ error: 'Failed to load billing stats' });
+  res.json(billing);
 });
 
 // GET /admin/users

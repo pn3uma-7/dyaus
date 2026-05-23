@@ -106,6 +106,49 @@ async function getUsageByUser(userId, limit = 50, offset = 0) {
   return result.rows;
 }
 
+// ── Platform settings ─────────────────────────────────────────────────────────
+
+async function getSetting(key) {
+  const result = await pool.query(`SELECT value FROM settings WHERE key = $1`, [key]);
+  return result.rows[0]?.value ?? null;
+}
+
+async function setSetting(key, value) {
+  await pool.query(
+    `INSERT INTO settings (key, value) VALUES ($1, $2)
+     ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value`,
+    [key, value]
+  );
+}
+
+async function getAllSettings() {
+  const result = await pool.query(`SELECT key, value FROM settings ORDER BY key`);
+  return Object.fromEntries(result.rows.map((r) => [r.key, r.value]));
+}
+
+// ── Orders / payments ─────────────────────────────────────────────────────────
+
+async function createOrder({ userId, razorpayOrderId, amountPaise, credits, packName }) {
+  const result = await pool.query(
+    `INSERT INTO orders (user_id, razorpay_order_id, amount_paise, credits, pack_name)
+     VALUES ($1, $2, $3, $4, $5)
+     RETURNING id, razorpay_order_id, amount_paise, credits, pack_name, status`,
+    [userId, razorpayOrderId, amountPaise, credits, packName]
+  );
+  return result.rows[0];
+}
+
+async function markOrderPaid({ razorpayOrderId, razorpayPaymentId, userId }) {
+  const result = await pool.query(
+    `UPDATE orders
+     SET status = 'paid', razorpay_payment_id = $1, paid_at = NOW()
+     WHERE razorpay_order_id = $2 AND user_id = $3 AND status = 'created'
+     RETURNING id, credits, pack_name`,
+    [razorpayPaymentId, razorpayOrderId, userId]
+  );
+  return result.rows[0] || null;
+}
+
 // ── Admin ─────────────────────────────────────────────────────────────────────
 
 async function listUsers() {
@@ -154,6 +197,30 @@ async function adjustCredits(userId, amount) {
   return result.rows[0] || null;
 }
 
+async function getBillingStats() {
+  const [summary, daily] = await Promise.all([
+    pool.query(`
+      SELECT
+        COUNT(*)::int                           AS total_orders,
+        COALESCE(SUM(amount_paise), 0)::bigint  AS total_revenue_paise,
+        COALESCE(SUM(credits), 0)::bigint       AS total_credits_sold
+      FROM orders WHERE status = 'paid'
+    `),
+    pool.query(`
+      SELECT
+        DATE(paid_at)             AS date,
+        COUNT(*)::int             AS orders,
+        SUM(amount_paise)::bigint AS revenue_paise,
+        SUM(credits)::bigint      AS credits
+      FROM orders
+      WHERE status = 'paid' AND paid_at >= NOW() - INTERVAL '30 days'
+      GROUP BY DATE(paid_at)
+      ORDER BY date DESC
+    `),
+  ]);
+  return { ...summary.rows[0], daily: daily.rows };
+}
+
 async function getStats() {
   const result = await pool.query(`
     SELECT
@@ -171,6 +238,8 @@ module.exports = {
   pool,
   getKeyByHash, deductCredits, updateLastUsed, logUsage,
   getUserById, getUserByEmail, getKeysByUserId, createKey, deactivateKey, getUsageByUser,
-  listUsers, createUser, adjustCredits, getStats,
+  getSetting, setSetting, getAllSettings,
+  createOrder, markOrderPaid,
+  listUsers, createUser, adjustCredits, getStats, getBillingStats,
   disableUser, enableUser, hardDeleteUser,
 };

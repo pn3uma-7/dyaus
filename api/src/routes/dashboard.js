@@ -4,13 +4,19 @@ const express = require('express');
 const { sessionAuth } = require('../middleware/sessionAuth');
 const { chatStream } = require('../services/inference');
 const {
-  getUserById, getKeysByUserId, createKey, deactivateKey, getUsageByUser,
+  getUserById, getKeysByUserId, createKey, deactivateKey, getUsageByUser, getSetting,
 } = require('../services/postgres');
 const config = require('../config');
 
 const router = express.Router();
 
 router.use(sessionAuth);
+
+// GET /dashboard/settings — returns non-sensitive platform flags
+router.get('/settings', async (req, res) => {
+  const paymentsEnabled = await getSetting('payments_enabled').catch(() => 'true');
+  res.json({ payments_enabled: paymentsEnabled === 'true' });
+});
 
 // GET /dashboard/me
 router.get('/me', async (req, res) => {

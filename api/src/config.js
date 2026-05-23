@@ -45,4 +45,16 @@ module.exports = {
   apiKeyPrefix: process.env.API_KEY_PREFIX || 'sk-dyaus-',
   adminSecret: process.env.ADMIN_SECRET,
   keyCacheTtlSeconds: 60,
+
+  razorpay: {
+    keyId: process.env.RAZORPAY_KEY_ID,
+    keySecret: process.env.RAZORPAY_KEY_SECRET,
+  },
+
+  creditPacks: {
+    starter: { name: 'Starter', amountPaise: 4900,  credits: 50000 },
+    growth:  { name: 'Growth',  amountPaise: 14900, credits: 200000 },
+    pro:     { name: 'Pro',     amountPaise: 49900, credits: 750000 },
+    power:   { name: 'Power',   amountPaise: 99900, credits: 1800000 },
+  },
 };

@@ -31,6 +31,28 @@ CREATE TABLE usage_log (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+CREATE TABLE orders (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES users(id),
+  razorpay_order_id TEXT UNIQUE NOT NULL,
+  razorpay_payment_id TEXT UNIQUE,
+  amount_paise INTEGER NOT NULL,
+  credits INTEGER NOT NULL,
+  pack_name TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'created',   -- created | paid | failed
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  paid_at TIMESTAMPTZ
+);
+
+CREATE TABLE settings (
+  key   TEXT PRIMARY KEY,
+  value TEXT NOT NULL
+);
+
+INSERT INTO settings (key, value) VALUES ('payments_enabled', 'true');
+
 CREATE INDEX idx_api_keys_hash ON api_keys(key_hash);
 CREATE INDEX idx_usage_log_user ON usage_log(user_id);
 CREATE INDEX idx_usage_log_created ON usage_log(created_at);
+CREATE INDEX idx_orders_user ON orders(user_id);
+CREATE INDEX idx_orders_status ON orders(status);

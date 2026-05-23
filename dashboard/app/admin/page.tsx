@@ -11,9 +11,11 @@ export default async function AdminPage() {
     return <AdminLogin />;
   }
 
-  const [stats, users] = await Promise.all([
+  const [stats, users, billing, settings] = await Promise.all([
     adminGet('/admin/stats', secret).catch(() => null),
     adminGet('/admin/users', secret).catch(() => null),
+    adminGet('/admin/billing', secret).catch(() => null),
+    adminGet('/admin/settings', secret).catch(() => null),
   ]);
 
   // Secret rejected by API
@@ -21,5 +23,7 @@ export default async function AdminPage() {
     return <AdminLogin error="Session expired — please sign in again" />;
   }
 
-  return <AdminPanel stats={stats} users={users} />;
+  const paymentsEnabled = settings?.payments_enabled !== 'false';
+
+  return <AdminPanel stats={stats} users={users} billing={billing} paymentsEnabled={paymentsEnabled} />;
 }

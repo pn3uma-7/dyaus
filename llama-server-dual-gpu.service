@@ -1,0 +1,40 @@
+# llama-server.service — DUAL GPU VERSION
+# Apply this when the second RTX 3060 is physically installed in PC2.
+# Run: sudo cp llama-server-dual-gpu.service /etc/systemd/system/llama-server.service
+#      sudo systemctl daemon-reload && sudo systemctl restart llama-server
+
+[Unit]
+Description=Dyaus llama.cpp inference server (dual GPU)
+After=network.target
+
+[Service]
+Type=simple
+User=pn3uma
+WorkingDirectory=/home/pn3uma/llama.cpp
+ExecStart=/home/pn3uma/llama.cpp/build/bin/llama-server \
+  -m /models/Qwen3-Coder-30B-A3B-Instruct-Q4_K_M.gguf \
+  --n-gpu-layers 99 \
+  --split-mode row \
+  --no-mmap \
+  --mlock \
+  --cache-type-k q4_0 \
+  --cache-type-v q4_0 \
+  --ctx-size 65536 \
+  --parallel 8 \
+  --flash-attn \
+  --host 127.0.0.1 \
+  --port 8080
+Restart=on-failure
+RestartSec=10
+TimeoutStartSec=300
+LimitMEMLOCK=infinity
+Environment=CUDA_VISIBLE_DEVICES=0,1
+
+[Install]
+WantedBy=multi-user.target
+
+# Changes vs single-GPU:
+# --split-mode row      : distributes model rows across both GPUs (best for MoE)
+# CUDA_VISIBLE_DEVICES  : expose both cards
+# --ctx-size 65536      : doubled context — 24GB VRAM handles the larger KV cache
+# --parallel 8          : doubled slots — more concurrent users

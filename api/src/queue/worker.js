@@ -55,10 +55,29 @@ async function handleJob({ jobId, body, keyRecord }) {
   }
 }
 
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+const WEB_SEARCH_SYSTEM =
+  'You have access to a web_search tool. Use it whenever the user asks about current events, ' +
+  'recent news, real-time data, today\'s date, prices, weather, or anything that may have ' +
+  'changed since your training. Always search before saying you don\'t know something current.';
+
+function injectSearchSystem(messages) {
+  if (messages[0]?.role === 'system') {
+    // Append to existing system message rather than adding a second one
+    return [
+      { ...messages[0], content: messages[0].content + '\n\n' + WEB_SEARCH_SYSTEM },
+      ...messages.slice(1),
+    ];
+  }
+  return [{ role: 'system', content: WEB_SEARCH_SYSTEM }, ...messages];
+}
+
 // ── Agentic paths (with tool use) ─────────────────────────────────────────────
 
 async function handleWithToolsNonStream(body, redisChannel, start, model, keyRecord) {
-  const firstBody = { ...body, tools: [WEB_SEARCH_TOOL], tool_choice: 'auto', stream: false };
+  const messages = injectSearchSystem(body.messages ?? []);
+  const firstBody = { ...body, messages, tools: [WEB_SEARCH_TOOL], tool_choice: 'auto', stream: false };
   const firstResult = await chatCompletion(firstBody);
 
   const choice = firstResult.choices?.[0];
@@ -82,7 +101,7 @@ async function handleWithToolsNonStream(body, redisChannel, start, model, keyRec
     ...body,
     stream: false,
     messages: [
-      ...body.messages,
+      ...messages,
       { role: 'assistant', content: null, tool_calls: toolCalls },
       ...toolMessages,
     ],
@@ -101,8 +120,9 @@ async function handleWithToolsNonStream(body, redisChannel, start, model, keyRec
 }
 
 async function handleWithToolsStream(body, redisChannel, start, model, keyRecord) {
+  const messages = injectSearchSystem(body.messages ?? []);
   // First pass: non-streaming to detect tool calls cheaply
-  const firstBody = { ...body, tools: [WEB_SEARCH_TOOL], tool_choice: 'auto', stream: false };
+  const firstBody = { ...body, messages, tools: [WEB_SEARCH_TOOL], tool_choice: 'auto', stream: false };
   const firstResult = await chatCompletion(firstBody);
 
   const choice = firstResult.choices?.[0];
@@ -121,7 +141,7 @@ async function handleWithToolsStream(body, redisChannel, start, model, keyRecord
     ...body,
     stream: true,
     messages: [
-      ...body.messages,
+      ...messages,
       { role: 'assistant', content: null, tool_calls: toolCalls },
       ...toolMessages,
     ],

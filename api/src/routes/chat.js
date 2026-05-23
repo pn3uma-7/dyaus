@@ -59,7 +59,7 @@ router.post('/completions', auth, rateLimit, async (req, res) => {
       if (msg.type === 'chunk') {
         res.write(`${msg.line}\n\n`);
       } else if (msg.type === 'searching') {
-        res.write(`data: {"dyaus_status":"searching"}\n\n`);
+        res.write(`data: {"id":"dyaus-status","object":"chat.completion.chunk","choices":[{"index":0,"delta":{"content":""},"finish_reason":null}],"dyaus_status":"searching"}\n\n`);
       } else if (msg.type === 'done') {
         cleanup();
         res.write('data: [DONE]\n\n');

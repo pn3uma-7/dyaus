@@ -1,6 +1,6 @@
 import { getSessionJwt } from '../../lib/session';
 
-const API_URL = process.env.API_URL ?? 'https://api.ameytambe.rocks';
+const API_URL = process.env.API_URL ?? 'https://dyaus-api.33koti.dev';
 
 export async function POST(request: Request) {
   const jwt = await getSessionJwt();

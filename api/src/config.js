@@ -35,7 +35,7 @@ module.exports = {
 
   resend: {
     apiKey: process.env.RESEND_API_KEY,
-    from: process.env.RESEND_FROM || 'noreply@ameytambe.rocks',
+    from: process.env.RESEND_FROM || 'noreply@33koti.dev',
   },
 
   dashboardUrl: process.env.DASHBOARD_URL || 'http://localhost:3000',

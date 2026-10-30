@@ -56,7 +56,7 @@ export default async function DashboardPage() {
           />
         )}
         <KeysSection keys={keys} />
-        <QuickStartSection apiUrl={process.env.API_URL ?? 'https://api.ameytambe.rocks'} />
+        <QuickStartSection apiUrl={process.env.API_URL ?? 'https://dyaus-api.33koti.dev'} />
         <ChatSection />
         <UsageSection rows={usage} />
       </main>

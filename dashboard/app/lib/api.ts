@@ -1,4 +1,4 @@
-const API_URL = process.env.API_URL ?? 'https://api.ameytambe.rocks';
+const API_URL = process.env.API_URL ?? 'https://dyaus-api.33koti.dev';
 
 async function apiFetch(path: string, init: RequestInit) {
   const res = await fetch(`${API_URL}${path}`, { cache: 'no-store', ...init });

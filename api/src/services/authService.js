@@ -31,7 +31,8 @@ async function consumeMagicToken(token) {
 }
 
 async function sendMagicLinkEmail(email, magicUrl) {
-  await resend.emails.send({
+  // The Resend SDK returns API failures in `error` instead of throwing
+  const { error } = await resend.emails.send({
     from: config.resend.from,
     to: email,
     subject: 'Sign in to Dyaus',
@@ -49,6 +50,7 @@ async function sendMagicLinkEmail(email, magicUrl) {
       </div>
     `,
   });
+  if (error) throw new Error(`Resend: ${error.message}`);
 }
 
 module.exports = { issueJwt, verifyJwt, createMagicToken, consumeMagicToken, sendMagicLinkEmail };
